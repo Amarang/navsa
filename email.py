@@ -23,6 +23,9 @@ def sendMail(subject, body):
     print response
 
 import tv
-body = "Hi Nick <hr>"
+body = "Hi Nick,<br>"
 body += tv.output
+body += "Cheers,<br>NAVSA"
+body += "<hr>"
+body += tv.outputDetail
 sendMail("TV listings for %s" % datetime.date.today(),body)

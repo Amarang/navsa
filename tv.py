@@ -12,7 +12,7 @@ import movieRater
 url = "http://api.tvmedia.ca/tv/v2/lineups/2433/listings?api_key=1a8889539bd4d38cfef23821b8dbb0de&end=%s+00%%3A00%%3A00" % ( datetime.date.today()+datetime.timedelta(days=1) )
 jsontxt = urllib2.urlopen(url).read()
 
-# jsontxt = open("input2.json").read()
+# jsontxt = open("input.json").read()
 data = json.loads(jsontxt)
 
 def getImdbLink(title, year):
@@ -47,7 +47,9 @@ def showInfo(show, rating=-1.0):
     line += "<p style='text-indent:24pt'> "
     line += "%s; %s " % ( ", ".join(genres), show['description'] )
     try:
-        line += "(%s)" % getImdbLink(show['episodeTitle'], show['year'])
+        # line += "(%s)" % getImdbLink(show['episodeTitle'], show['year'])
+        if(len(show['imdbID']) > 3):
+            line += "(http://www.imdb.com/title/%s/)" % (show['imdbID'])
     except:
         print "couldn't get imdblink for %s (%s) imdb" % (show['episodeTitle'], show['year'])
     line += "</p> "
@@ -75,6 +77,7 @@ for channel in channels:
                 shows[channelName] = [listing]
 
 output = ""
+outputDetail = ""
 movies = []
 for channel in shows.keys():
     for show in shows[channel]:
@@ -84,15 +87,28 @@ for channel in shows.keys():
         if not(6 <= hour <= 10): continue
         if int(show['year']) < 1990: continue
 
-        rating = movieRater.getMovieRating(show['episodeTitle'],show['year']) 
+        rating, imdbID = movieRater.getMovieRating(show['episodeTitle'],show['year'], True) 
+        show['imdbID'] = imdbID
         movies.append([show, rating])
         # output += showInfo(show)
 
 
 # sort movies by rating
 movies.sort(key=lambda x: x[-1])
+movies = movies[::-1]
 for movie in movies:
-    output += showInfo(show, movie[-1])
+    outputDetail += showInfo(movie[0], movie[-1])
 
+if(len(movies) > 0):
+    bestMovie = movies[0]
+    description = bestMovie[0]['description']
+    output = "You'll like \"<b>{0}</b>\" as it has a Nick rating of {1}. Watch it on channel {2} at {3}. In short, {4}.".format(
+            bestMovie[0]['episodeTitle'],
+            bestMovie[-1],
+            bestMovie[0]['channelNum'],
+            formatTime(dictTime(bestMovie[0]['listDateTime'])),
+            description[0].lower()+description[1:]
+            )
 
-print output
+# print output
+# print outputDetail

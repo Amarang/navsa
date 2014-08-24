@@ -1,6 +1,6 @@
 import urllib,urllib2, json
 
-def getMovieRating(title, year=-1):
+def getMovieRating(title, year=-1, returnImdbID=False):
     movieScore = 0
 
     escapedTitle = urllib.quote(title,'')
@@ -15,11 +15,13 @@ def getMovieRating(title, year=-1):
         print "parse error: %s (%s)" % (title, str(year))
         ## TODO: return average rating in this case so we don't
         ## just throw stuff out
-        return -1
+        if(returnImdbID): return -1, ""
+        else: return -1
 
     if(data["Type"] != "movie"): 
         print "%s (%s) is not a movie! (maybe the date is wrong)" % (title, str(year))
-        return -1
+        if(returnImdbID): return -1, ""
+        else: return -1
 
     year = int(data['Year']) # get correct year if we left it out
     imdbID = data['imdbID']
@@ -28,6 +30,7 @@ def getMovieRating(title, year=-1):
     genres = map(lambda x: x.strip(), data['Genre'].split(","))
 
     genreScore = 0
+    # print genres
     for genre in genres:
         if(genre in ["Action", "Adventure", "Comedy", "Fantasy", "Romance", "Sci-Fi"]):
             genreScore += 1
@@ -44,7 +47,10 @@ def getMovieRating(title, year=-1):
     elif(year < 1990): movieScore -= 3 # screw this crap
     elif(year < 2000): movieScore -= 1 # screw this crap
 
-    return movieScore
+    if(returnImdbID):
+        return movieScore, imdbID
+    else:
+        return movieScore
 
 ####### uncomment everything below ONCE to test ranking algorithm
 
