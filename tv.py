@@ -57,58 +57,61 @@ def showInfo(show, rating=-1.0):
 
 
 
-channels = []
-for channel in data:
-    if( int(channel['number']) in [4, 11, 14, 27, 28, 40, 62] ):
-        channels.append(channel)
+def getMovies():
+    output = ""
+    outputDetail = ""
+    channels = []
+    for channel in data:
+        if( int(channel['number']) in [4, 11, 14, 27, 28, 40, 62] ):
+            channels.append(channel)
 
-shows = {}
-for channel in channels:
-    listings = channel['listings']
-    for listing in listings:
-        if listing['showName'] == "Movie":
-            channelName = channel['callsign']
-            # add channel info to dict
-            listing['channelNum'] = channel['number']
-            listing['channelName'] = channelName
-            try:
-                shows[channelName].append(listing)
-            except:
-                shows[channelName] = [listing]
+    shows = {}
+    for channel in channels:
+        listings = channel['listings']
+        for listing in listings:
+            if listing['showName'] == "Movie":
+                channelName = channel['callsign']
+                # add channel info to dict
+                listing['channelNum'] = channel['number']
+                listing['channelName'] = channelName
+                try:
+                    shows[channelName].append(listing)
+                except:
+                    shows[channelName] = [listing]
 
-output = ""
-outputDetail = ""
-movies = []
-for channel in shows.keys():
-    for show in shows[channel]:
-        #### make cuts ####
-        # don't recommend if it's got a bad time
-        hour = dictTime(show['listDateTime']).hour % 12
-        if not(6 <= hour <= 10): continue
-        if int(show['year']) < 1990: continue
+    movies = []
+    for channel in shows.keys():
+        for show in shows[channel]:
+            #### make cuts ####
+            # don't recommend if it's got a bad time
+            hour = dictTime(show['listDateTime']).hour
+            if not(6+12 <= hour <= 10+12): continue
+            if int(show['year']) < 1990: continue
 
-        rating, imdbID = movieRater.getMovieRating(show['episodeTitle'],show['year'], True) 
-        show['imdbID'] = imdbID
-        movies.append([show, rating])
-        # output += showInfo(show)
+            rating, imdbID = movieRater.getMovieRating(show['episodeTitle'],show['year'], True) 
+            show['imdbID'] = imdbID
+            movies.append([show, rating])
+            # output += showInfo(show)
 
 
-# sort movies by rating
-movies.sort(key=lambda x: x[-1])
-movies = movies[::-1]
-for movie in movies:
-    outputDetail += showInfo(movie[0], movie[-1])
+    # sort movies by rating
+    movies.sort(key=lambda x: x[-1])
+    movies = movies[::-1]
+    for movie in movies:
+        outputDetail += showInfo(movie[0], movie[-1])
 
-if(len(movies) > 0):
-    bestMovie = movies[0]
-    description = bestMovie[0]['description']
-    output = "You'll like \"<b>{0}</b>\" as it has a Nick rating of {1}. Watch it on channel {2} at {3}. In short, {4}.".format(
-            bestMovie[0]['episodeTitle'],
-            bestMovie[-1],
-            bestMovie[0]['channelNum'],
-            formatTime(dictTime(bestMovie[0]['listDateTime'])),
-            description[0].lower()+description[1:]
-            )
+    if(len(movies) > 0):
+        if(movies[0][-1] > 7.0): # threshold for best movie
+            bestMovie = movies[0]
+            description = bestMovie[0]['description']
+            output += "After work, treat yourself to \"<b>{0}</b>\" as it has a Nick rating of {1}. Watch it on channel {2} at {3}. In short, {4}.".format(
+                    bestMovie[0]['episodeTitle'],
+                    bestMovie[-1],
+                    bestMovie[0]['channelNum'],
+                    formatTime(dictTime(bestMovie[0]['listDateTime'])),
+                    description[0].lower()+description[1:]
+                    )
 
-# print output
-# print outputDetail
+    # print output
+    # print outputDetail
+    return output, outputDetail
