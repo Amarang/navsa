@@ -5,7 +5,7 @@ def forecast():
     data = json.loads(urllib.urlopen("http://api.wunderground.com/api/48c1f91829cc66cb/forecast/q/CA/%s.json" % str(zipcode) ).read())
 
     today = data['forecast']['simpleforecast']['forecastday'][0]
-    print today
+    # print today
 
     windspeed = int(0.8 * today['avewind']['mph'] + 0.2 * today['maxwind']['mph'])
     winddir = today['avewind']['dir']
@@ -62,7 +62,7 @@ def summary( cur, fc ):
     if(fc_rainfall > 0):
         response += "<b>THERE IS A NON-ZERO CHANCE OF RAIN TODAY! You're lookin' at {0} inches, baby!</b><br>".format(fc_rainfall)
 
-    response += "Conditions today will be <b>{0}</b>. ".format(fc_conditions.lower())
+    response += "<img src='{1}' />Conditions today will be <b>{0}</b>. ".format(fc_conditions.lower(), fc_conditionsIcon)
 
 
     response += "It's {0}F right now, but will get to {1}F today and {2}F tonight. ".format(cur_temperature, fc_high, fc_low)
@@ -92,7 +92,9 @@ def getWeather():
     outputDetail = ""
 
     fc = forecast()
+    print "got forecast"
     cur = current()
+    print "got current conditions"
     # fc = (11, "WSW", 70, 59, 0.1, "Clear", "url")
     # cur = (5, "WSW", 67, "Clear", "url")
     outputDetail += forecastStr(*fc)

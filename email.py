@@ -1,4 +1,4 @@
-import urllib, urllib2, datetime
+import urllib, urllib2, datetime, json
 
 # NAVSA - Not A Very Sophisticated Assistant
 def sendMail(subject, body):
@@ -19,22 +19,37 @@ def sendMail(subject, body):
     opener = urllib2.build_opener(authMgr)
     urllib2.install_opener(opener)
 
-    response = urllib2.urlopen(req).read()
-    print response
+    successful = True
+    try:
+        response = urllib2.urlopen(req).read()
+        jsonResponse = json.loads(response)
+        if( jsonResponse['message'] != "Queued. Thank you." ):
+            successful = False
+    except:
+        print "couldn't get response!"
+        successful = False
+    return successful
 
 
 sep = "<br>"
 body = "Hi Nick,"+sep*2
 
-import tv, weather
+import tv, weather, move
+
 
 weoutput, weoutputDetail = weather.getWeather()
+print "got weather output"
 tvoutput, tvoutputDetail = tv.getMovies()
+print "got tv output"
+moveoutput, moveoutputDetail = move.getWalk()
+print "got tv output"
 
 # summary content
 body += weoutput
 body += sep*2
 body += tvoutput
+body += sep*2
+body += moveoutput
 
 # salutation
 body += sep*2
@@ -45,8 +60,13 @@ body += sep*5
 body += "<hr>"
 body += weoutputDetail
 body += sep*2
+body += moveoutputDetail
+body += sep*2
 body += tvoutputDetail
 
 # print body
-sendMail("Status update for %s" % datetime.date.today(),body)
+if sendMail("Status update for %s" % datetime.date.today(),body):
+    print "email sent successfully!"
+else:
+    print "ERROR sending email"
 # sendMail("test","testbody")

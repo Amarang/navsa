@@ -9,11 +9,6 @@ import movieRater
     # use Mailgun API http://www.mailgun.com/
     # use mandrillAPI https://mandrillapp.com
 
-url = "http://api.tvmedia.ca/tv/v2/lineups/2433/listings?api_key=1a8889539bd4d38cfef23821b8dbb0de&end=%s+00%%3A00%%3A00" % ( datetime.date.today()+datetime.timedelta(days=1) )
-jsontxt = urllib2.urlopen(url).read()
-
-# jsontxt = open("input.json").read()
-data = json.loads(jsontxt)
 
 def getImdbLink(title, year):
     query = "%s (%s) imdb" % (title, year)
@@ -58,8 +53,19 @@ def showInfo(show, rating=-1.0):
 
 
 def getMovies():
+
+    url = "http://api.tvmedia.ca/tv/v2/lineups/2433/listings?api_key=1a8889539bd4d38cfef23821b8dbb0de&end=%s+00%%3A00%%3A00" % ( datetime.date.today()+datetime.timedelta(days=1) )
+    jsontxt = urllib2.urlopen(url).read()
+
+    # jsontxt = open("input.json").read()
+    data = json.loads(jsontxt)
+
+    print "got tv json"
+
+
     output = ""
     outputDetail = ""
+
     channels = []
     for channel in data:
         if( int(channel['number']) in [4, 11, 14, 27, 28, 40, 62] ):
@@ -93,6 +99,7 @@ def getMovies():
             movies.append([show, rating])
             # output += showInfo(show)
 
+    print "got movie ratings"
 
     # sort movies by rating
     movies.sort(key=lambda x: x[-1])
