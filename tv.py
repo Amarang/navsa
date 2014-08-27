@@ -118,6 +118,11 @@ def getMovies():
                     formatTime(dictTime(bestMovie[0]['listDateTime'])),
                     description[0].lower()+description[1:]
                     )
+        else:
+            output += "There are no high-ranked movies that I think you would like, but check out the ones I have listed anyways. Maybe you can correct my algorithm if there's something wrong with me."
+    else:
+        output += "There are no movies that would interest you."
+
 
     # print output
     # print outputDetail

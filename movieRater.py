@@ -37,11 +37,14 @@ def getMovieRating(title, year=-1, returnImdbID=False):
     movieScore += 0.7*genreScore**2 # add square of matched genres; movies with multiple ones are much better!
     # not fair if there's only one genre like for Borat
 
-    votesScore = int(numVotes.replace(",","")) // 300000 # popularity points
+    votesScore = int(numVotes.replace(",","")) // 250000 # popularity points
     movieScore += votesScore
 
     ratingScore = 2.0*(float(rating) - 5.0) # yes, this means it can be negative :)
     movieScore += ratingScore
+
+    if(data['Awards'] != "N/A"):
+        movieScore += 1
 
     if(year < 1970): movieScore -= 5 # screw this crap
     elif(year < 1990): movieScore -= 3 # screw this crap
