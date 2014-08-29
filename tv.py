@@ -111,7 +111,7 @@ def getMovies():
         if(movies[0][-1] > 7.0): # threshold for best movie
             bestMovie = movies[0]
             description = bestMovie[0]['description']
-            output += "After work, treat yourself to \"<b>{0}</b>\" as it has a Nick rating of {1}. Watch it on channel {2} at {3}. In short, {4}.".format(
+            output += "After work, treat yourself to \"<b>{0}</b>\" as it has a Nick rating of {1}. Watch it on channel {2} at {3}. In short, {4}".format(
                     bestMovie[0]['episodeTitle'],
                     bestMovie[-1],
                     bestMovie[0]['channelNum'],

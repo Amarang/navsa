@@ -11,14 +11,14 @@ import delta
 # https://maps.google.com/locationhistory/b/0/kml?startTime=1373666400000&endTime=1373752800000
 # in developer tools pane, go to network tab and right click on the kml?startTime= entry and get the curl information, paste below and make appropriate modifications
 
-def getWalk():
+def getWalk(numDays=1):
     output = ""
     outputDetail = ""
 
 
     debugOffset = datetime.timedelta(days=0)
     # start of yesterday
-    startTime = 1000*calendar.timegm((datetime.date.today() - datetime.timedelta(days=1) - debugOffset).timetuple())
+    startTime = 1000*calendar.timegm((datetime.date.today() - datetime.timedelta(days=numDays) - debugOffset).timetuple())
     # start of today
     endTime = 1000*calendar.timegm((datetime.date.today() - debugOffset).timetuple())
     # so this finds movement for yesterday
@@ -81,6 +81,7 @@ def getWalk():
 
     output += "Yesterday, you walked a distance of %.1f miles with an average walking speed of %.1f mph." % (totalDist, sumSpeed/numHops)
     outputDetail += "Yesterday, you walked a distance of %.1f miles with an average walking speed of %.1f mph.<br>" % (totalDist, sumSpeed/numHops)
+    outputDetail += "There were a total of %i good data points. " % (numHops)
     outputDetail += "You can get the KML file at https://maps.google.com/locationhistory/b/0/kml?startTime=%i&endTime=%i <br>" % (startTime, endTime)
     outputDetail += "The GUI map is at https://maps.google.com/locationhistory/b/0 <br>"
 
