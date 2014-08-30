@@ -90,8 +90,13 @@ def getMovies():
         for show in shows[channel]:
             #### make cuts ####
             # don't recommend if it's got a bad time
-            hour = dictTime(show['listDateTime']).hour
-            if not(6+12 <= hour <= 10+12): continue
+            date = dictTime(show['listDateTime'])
+            hour = date.hour
+            isWeekend = date.weekday() in [5, 6]
+            if(isWeekend):
+                if not(2+12 <= hour <= 11+12): continue
+            else:
+                if not(6+12 <= hour <= 10+12): continue
             if int(show['year']) < 1990: continue
 
             rating, imdbID = movieRater.getMovieRating(show['episodeTitle'],show['year'], True) 
