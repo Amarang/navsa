@@ -16,6 +16,7 @@ def distance(p1, p2):
 def speed(p1, p2, t1, t2):
     dx = distance(p1, p2)
     dt = 1.0*(t2-t1).seconds / 3600.0
+    if(dt < 0.01): dt = 10000.0
     return dx/dt # miles per hour
 
     
