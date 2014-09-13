@@ -55,7 +55,15 @@ def showInfo(show, rating=-1.0):
 def getMovies():
 
     url = "http://api.tvmedia.ca/tv/v2/lineups/2433/listings?api_key=1a8889539bd4d38cfef23821b8dbb0de&end=%s+00%%3A00%%3A00" % ( datetime.date.today()+datetime.timedelta(days=1) )
+    print url
     jsontxt = urllib2.urlopen(url).read()
+
+    jsontxtlines = jsontxt.split("\n")
+    jsontxt = '\n'.join([line.strip() for line in jsontxtlines if "stationID" in line])
+    # print jsontxt
+    jsontxt = jsontxt.replace("</div>","")
+    # print '\n'*100
+    # print jsontxt
 
     # jsontxt = open("input.json").read()
     data = json.loads(jsontxt)
@@ -97,7 +105,11 @@ def getMovies():
                 if not(2+12 <= hour <= 11+12): continue
             else:
                 if not(6+12 <= hour <= 10+12): continue
-            if int(show['year']) < 1990: continue
+
+            try:
+                if int(show['year']) < 1990: continue
+            except:
+                pass
 
             rating, imdbID = movieRater.getMovieRating(show['episodeTitle'],show['year'], True) 
             show['imdbID'] = imdbID
