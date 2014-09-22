@@ -1,8 +1,8 @@
 import base64, commands, config
 
 def getBalance():
-    u = base64.urlsafe_b64decode(config.barc['u'])
-    p = base64.urlsafe_b64decode(config.barc['p'])
+    u = base64.urlsafe_b64decode(config.barc['u'][::-1])
+    p = base64.urlsafe_b64decode(config.barc['p'][::-1])
 
     req = """
     curl "https://mybarc.ucsb.edu/SIWeb/login.do" --data "userid=%s&password=%s&submitButton=Student+Login&fromJSP=L&doValidate=true"
