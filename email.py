@@ -35,7 +35,7 @@ def sendMail(subject, body):
 sep = "<br>"
 body = "Hi Nick,"+sep*2
 
-import tv, weather, move, tpb
+import tv, weather, move, tpb, barc
 
 
 weoutput, weoutputDetail = weather.getWeather()
@@ -46,6 +46,8 @@ moveoutput, moveoutputDetail = move.getWalk()
 print "got tv output"
 tpboutput, tpboutputDetail = tpb.getTPB()
 print "got tpb output"
+barcoutput, barcoutputDetail = barc.getBARC()
+print "got barc output"
 
 # summary content
 body += weoutput
@@ -53,6 +55,8 @@ body += sep*2
 body += tvoutput
 body += sep*2
 body += tpboutput
+body += sep*2
+body += barcoutput
 body += sep*2
 body += moveoutput
 
@@ -70,6 +74,8 @@ body += sep*2
 body += tvoutputDetail
 body += sep*2
 body += tpboutputDetail
+body += sep*2
+body += barcoutputDetail
 
 # print body
 if sendMail("Status update for %s" % datetime.date.today(),body):
