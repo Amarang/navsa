@@ -3,6 +3,7 @@ import urllib, urllib2, datetime, json
 # NAVSA - Not A Very Sophisticated Assistant
 def sendMail(subject, body):
     url = 'https://api.mailgun.net/v2/sandbox96042724eeb049af864d017016a510a3.mailgun.org/messages'
+    body = body.encode('ascii', 'ignore')
     values = {
     'to' : 'typhoid.pwns@gmail.com',
     'subject' : subject,
@@ -34,7 +35,7 @@ def sendMail(subject, body):
 sep = "<br>"
 body = "Hi Nick,"+sep*2
 
-import tv, weather, move
+import tv, weather, move, tpb
 
 
 weoutput, weoutputDetail = weather.getWeather()
@@ -43,11 +44,15 @@ tvoutput, tvoutputDetail = tv.getMovies()
 print "got tv output"
 moveoutput, moveoutputDetail = move.getWalk()
 print "got tv output"
+tpboutput, tpboutputDetail = tpb.getTPB()
+print "got tpb output"
 
 # summary content
 body += weoutput
 body += sep*2
 body += tvoutput
+body += sep*2
+body += tpboutput
 body += sep*2
 body += moveoutput
 
@@ -63,6 +68,8 @@ body += sep*2
 body += moveoutputDetail
 body += sep*2
 body += tvoutputDetail
+body += sep*2
+body += tpboutputDetail
 
 # print body
 if sendMail("Status update for %s" % datetime.date.today(),body):
