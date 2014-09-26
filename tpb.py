@@ -44,7 +44,7 @@ def torrents():
         # print movie
         name, date, size, uploader, link = movie
         if(uploader != 'YIFY'): continue
-        if(size > 1000): continue
+        if(size > 3000): continue
         # print date
         try:
 
@@ -80,4 +80,4 @@ def getTPB():
     return output, outputDetail
 
         
-# print getTPB()
+print getTPB()
