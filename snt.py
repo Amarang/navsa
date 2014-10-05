@@ -16,4 +16,4 @@ def getSNT():
 
     return output, outputDetail
 
-print getSNT()
+# print getSNT()
