@@ -5,11 +5,11 @@ def sendMail(subject, body):
     url = 'https://api.mailgun.net/v2/sandbox96042724eeb049af864d017016a510a3.mailgun.org/messages'
     body = body.encode('ascii', 'ignore')
     values = {
-    'to' : 'typhoid.pwns@gmail.com',
-    'subject' : subject,
-    'html' : body,
-    'from': ' NAVSA <navsa@navsa.mailgun.org>',
-    }
+            'to' : 'typhoid.pwns@gmail.com',
+            'subject' : subject,
+            'html' : body,
+            'from': ' NAVSA <navsa@navsa.mailgun.org>',
+            }
 
     data = urllib.urlencode(values)
     req = urllib2.Request(url, data)
@@ -31,6 +31,17 @@ def sendMail(subject, body):
         successful = False
     return successful
 
+def formatPrint(sep, text):
+    out = ""
+    if(len(text) > 1):
+        out += sep*2
+        out += text
+    else:
+        out += text
+
+    return out
+
+
 
 sep = "<br>"
 body = "Hi Nick,"+sep*2
@@ -43,7 +54,7 @@ print "got weather output"
 tvoutput, tvoutputDetail = tv.getMovies()
 print "got tv output"
 moveoutput, moveoutputDetail = move.getWalk()
-print "got tv output"
+print "got gps output"
 tpboutput, tpboutputDetail = tpb.getTPB()
 print "got tpb output"
 barcoutput, barcoutputDetail = barc.getBARC()
@@ -54,13 +65,13 @@ fboutput, fboutputDetail = fb.getFB(8.0)
 print "got fb output"
 
 # summary content
-body += weoutput
-body += sep*2 + tvoutput
-body += sep*2 + tpboutput
-body += sep*2 + barcoutput
-body += sep*2 + sntoutput
-body += sep*2 + moveoutput
-body += sep*2 + fboutput
+body +=                  weoutput
+body += formatPrint(sep, tvoutput)
+body += formatPrint(sep, tpboutput)
+body += formatPrint(sep, barcoutput)
+body += formatPrint(sep, sntoutput)
+body += formatPrint(sep, moveoutput)
+body += formatPrint(sep, fboutput)
 
 # salutation
 body += sep*2
@@ -69,13 +80,13 @@ body += sep*5
 
 # detailed content
 body += "<hr>"
-body += weoutputDetail
-body += sep*2 + moveoutputDetail
-body += sep*2 + tvoutputDetail
-body += sep*2 + tpboutputDetail
-body += sep*2 + barcoutputDetail
-body += sep*2 + sntoutputDetail
-body += sep*2 + fboutputDetail
+body +=                  weoutputDetail
+body += formatPrint(sep, moveoutputDetail)
+body += formatPrint(sep, tvoutputDetail)
+body += formatPrint(sep, tpboutputDetail)
+body += formatPrint(sep, barcoutputDetail)
+body += formatPrint(sep, sntoutputDetail)
+body += formatPrint(sep, fboutputDetail)
 
 # print body
 if sendMail("Status update for %s" % datetime.date.today(),body):
