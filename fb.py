@@ -33,11 +33,15 @@ def getFB(timeInterval):
         notifications.append( desc )
        
     if(numNotifications > 0):
-        output += "You got %i facebook notification%s since midnight" % (numNotifications, 's' if numNotifications > 1 else '')
-        outputDetail += "Facebook notifications in past %.1f hours" % (timeInterval)
+        output += "You got %i facebook notification%s since midnight:" % (numNotifications, 's' if numNotifications > 1 else '')
         for notification in notifications:
-            outputDetail += "\n\t- %s" % (notification)
+            output += "<ul>"
+            output += "<li>%s</li>" % notification
+            output += "</ul>"
+        # outputDetail += "Facebook notifications in past %.1f hours" % (timeInterval)
+        # for notification in notifications:
+            # outputDetail += "\n\t- %s" % (notification)
     return output, outputDetail
 
-for i in getFB(8.0):
-    print i
+# for i in getFB(8.0):
+#     print i
