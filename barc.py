@@ -22,7 +22,9 @@ def getBARC():
     balance = float(getBalance())
 
     if(balance > 0):
-        output += "Your BARC balance is <b>%.2f</b>!" % balance
+        output += "Your BARC balance is <b>$%.2f</b>!" % balance
+
+    outputDetail += "Your BARC balance is <b>$%.2f</b>." % balance
 
     return output, outputDetail
 

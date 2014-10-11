@@ -1,7 +1,49 @@
 import bs4
 import datetime
 from dateutil.parser import parse
-import urllib2, urllib
+import urllib2, urllib, re
+
+
+def cullMovies(movies):
+
+    thisYear = datetime.datetime.today().year
+    names = [movie[0] for movie in movies]
+
+    goodmovies = []
+    for movie in movies:
+        name, date, size, uploader, link = movie
+        if(uploader != 'YIFY'): continue
+        if(size > 3000): continue
+        try:
+            d1 = parse(date)
+            days = (datetime.datetime.today() - d1).days
+            if(days > 4): continue
+            
+        except:
+            # if can't parse, probably means it has "y-day" or "45 mins ago" in it
+            # in which case, it's recent enough to be within threshold of
+            # consideration anyways
+            pass
+
+        m = re.search("\(([0-9]{4})\)", name)
+        if(m): 
+            year = int(m.groups()[0])
+            if year != thisYear:
+                continue
+       
+        # if this is 720p and we have a 1080p version, 
+        # then ignore the 720p one
+        if("720p" in name):
+            tocheck = name.replace("720p","1080p")
+            # print tocheck, tocheck in names
+            if(tocheck in names):
+                continue
+
+        goodmovies.append( [name, date, link] )
+
+    # print goodmovies
+    return goodmovies
+
 
 def torrents():
     # data = open("tpb.txt", "r").read().strip().split("\n")
@@ -39,28 +81,7 @@ def torrents():
         movies.append( [ name, date, size, uploader, link ] )
         # print tr.find('div').find('a').text
 
-    goodmovies = []
-    for movie in movies:
-        # print movie
-        name, date, size, uploader, link = movie
-        if(uploader != 'YIFY'): continue
-        if(size > 3000): continue
-        # print date
-        try:
-
-            d1 = parse(date)
-            days = (datetime.datetime.today() - d1).days
-            if(days > 2): continue
-            
-        except:
-            # if can't parse, probably means it has "y-day" or "45 mins ago" in it
-            # in which case, it's recent enough to be within threshold of
-            # consideration anyways
-            pass
-
-        
-        goodmovies.append( [name, date, link] )
-    return goodmovies
+    return cullMovies(movies)
 
 def getTPB():
     output = ""
@@ -72,6 +93,8 @@ def getTPB():
     if(len(movies) > 0):
         output += "Additionally, I found these recent movie torrents:"
     output += "<ul>"
+
+    # movies = cullMovies(movies)
     for movie in movies:
         name, date, link = movie
         output += "<li>%s (%s)</li>" % (name, link)
