@@ -12,7 +12,7 @@ def getBalance():
     for line in data.split("\n"):
         if "Balance on your account" in line and not "Current" in line:
             balance = line.split(">")[-2].split("<")[0]
-            balance = "".join([e for e in balance if e in "0123456789."])
+            balance = "".join([e for e in balance if e in "-0123456789."])
             return balance
 
 def getBARC():
