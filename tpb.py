@@ -17,7 +17,7 @@ def cullMovies(movies):
         try:
             d1 = parse(date)
             days = (datetime.datetime.today() - d1).days
-            if(days > 4): continue
+            if(days > 2): continue
             
         except:
             # if can't parse, probably means it has "y-day" or "45 mins ago" in it
