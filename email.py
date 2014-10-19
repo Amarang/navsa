@@ -46,7 +46,7 @@ def formatPrint(sep, text):
 sep = "<br>"
 body = "Hi Nick,"+sep*2
 
-import tv, weather, move, tpb, barc, snt, fb
+import tv, weather, move, tpb, barc, snt, fb, arxiv
 
 
 weoutput, weoutputDetail = weather.getWeather()
@@ -63,6 +63,8 @@ sntoutput, sntoutputDetail = snt.getSNT()
 print "got snt output"
 fboutput, fboutputDetail = fb.getFB(8.0)
 print "got fb output"
+arxivoutput, arxivoutputDetail = arxiv.getArxiv()
+print "got fb output"
 
 # summary content
 body +=                  weoutput
@@ -70,6 +72,7 @@ body += formatPrint(sep, tvoutput)
 body += formatPrint(sep, tpboutput)
 body += formatPrint(sep, barcoutput)
 body += formatPrint(sep, sntoutput)
+body += formatPrint(sep, arxivoutput)
 body += formatPrint(sep, moveoutput)
 body += formatPrint(sep, fboutput)
 
@@ -84,6 +87,7 @@ body +=                  weoutputDetail
 body += formatPrint(sep, moveoutputDetail)
 body += formatPrint(sep, tvoutputDetail)
 body += formatPrint(sep, tpboutputDetail)
+body += formatPrint(sep, arxivoutputDetail)
 body += formatPrint(sep, barcoutputDetail)
 body += formatPrint(sep, sntoutputDetail)
 body += formatPrint(sep, fboutputDetail)
