@@ -1,11 +1,10 @@
-import bs4
-import urllib2
-import datetime
+import bs4, urllib2, datetime
+import config
 from dateutil.parser import parse
 
 
 def getPapers():
-    category = "hep-ex"
+    category = config.arxiv['field']
     data = urllib2.urlopen("http://export.arxiv.org/api/query?search_query=cat:%s&start=0&max_results=10&sortBy=submittedDate&sortOrder=descending" % category).read()
 
     # data = open("arxivapi.txt").read()
