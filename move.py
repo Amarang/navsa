@@ -30,6 +30,8 @@ def getWalk(numDays=1):
     req = req.strip()
 
     status, kml = commands.getstatusoutput(req)
+
+
     # print output
     # kml = open("history-08-18-2014.kml","r").read()
 
@@ -63,8 +65,10 @@ def getWalk(numDays=1):
         t1, t2 = times[i], times[i+1]
 
 
+
         dist = delta.distance(p1,p2)
         speed = delta.speed(p1,p2, t1,t2)
+
         if(dist > 1.0): continue
         if(speed > 12): continue
 
@@ -87,8 +91,3 @@ def getWalk(numDays=1):
 
     return output, outputDetail
 
-
-# print getWalk()
-
-    # print output
-    #
