@@ -114,9 +114,12 @@ def getMovies():
             except:
                 pass
 
-            rating, imdbID = movieRater.getMovieRating(show['episodeTitle'],show['year'], True) 
-            show['imdbID'] = imdbID
-            movies.append([show, rating])
+            try:
+                rating, imdbID = movieRater.getMovieRating(show['episodeTitle'],show['year'], True) 
+                show['imdbID'] = imdbID
+                movies.append([show, rating])
+            except:
+                pass
             # output += showInfo(show)
 
     print "got movie ratings"
