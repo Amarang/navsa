@@ -60,7 +60,7 @@ def summary( cur, fc ):
     response = ""
 
     if(fc_rainfall > 0):
-        response += "<b>THERE IS A NON-ZERO CHANCE OF RAIN TODAY! You're lookin' at {0} inches, baby!</b><br>".format(fc_rainfall)
+        response += "<b>THERE IS A NON-ZERO CHANCE OF RAIN TODAY! You're lookin' at {0} inches, dude!</b><br>".format(fc_rainfall)
 
     response += "<img src='{1}' />Conditions today will be <b>{0}</b>. ".format(fc_conditions.lower(), fc_conditionsIcon)
 
