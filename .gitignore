@@ -1,0 +1,4 @@
+*.pyc
+test
+movement
+config.py
