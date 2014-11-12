@@ -29,7 +29,9 @@ def getBARC():
 
         if(balance > 0):
             output += "Your BARC balance (subtracting offset of %.2f) is <b>$%.2f</b>!" % (offset, balance)
-        else:
+        elif(balance < 0):
+            output += "Your BARC balance was paid off. You are now at <b>$%.2f</b> (defined offset is %.2f)!" % (balance+offset, offset)
+        else: 
             pass
 
     else:
