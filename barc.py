@@ -21,10 +21,22 @@ def getBARC():
 
     balance = float(getBalance())
 
-    if(balance > 0):
-        output += "Your BARC balance is <b>$%.2f</b>!" % balance
+    # offset gives me the ability to handle tuition not being paid for weeks upon weeks
+    offset = float(config.barc['offset'])
 
-    outputDetail += "Your BARC balance is <b>$%.2f</b>." % balance
+    if(offset > 0):
+        balance -= offset
+
+        if(balance > 0):
+            output += "Your BARC balance (subtracting offset of %.2f) is <b>$%.2f</b>!" % (offset, balance)
+        else:
+            pass
+
+    else:
+        if(balance > 0):
+            output += "Your BARC balance is <b>$%.2f</b>!" % balance
+
+    outputDetail += "Your BARC balance is <b>$%.2f</b> with an offset of %.2f." % (balance, offset)
 
     return output, outputDetail
 
