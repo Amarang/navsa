@@ -87,7 +87,13 @@ def getTPB():
     output = ""
     outputDetail = ""
 
-    movies = torrents()
+
+    try:
+        movies = torrents()
+    except:
+        print "error reaching tpb"
+        return output, outputDetail
+
     print "got torrents"
 
     if(len(movies) > 0):
