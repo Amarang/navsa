@@ -2,6 +2,7 @@ import bs4
 import datetime
 from dateutil.parser import parse
 import urllib2, urllib, re
+import commands
 
 
 def cullMovies(movies):
@@ -48,9 +49,13 @@ def cullMovies(movies):
 def torrents():
     # data = open("tpb.txt", "r").read().strip().split("\n")
     # data2 = open("tpb.txt", "r").read()
-    data = urllib2.urlopen("http://thepiratebay.se/top/207").read()
+    baseurl = "https://thepiratebay.mn"
+    # data = urllib2.urlopen(baseurl+"/top/207").read()
+    cmd = "curl -s -m 20 " + baseurl + "/top/207"
+    # print cmd
+    status,data = commands.getstatusoutput(cmd)
 
-    baseurl = "http://thepiratebay.se"
+    # print data
     # print data2
     # bs = bs4.BeautifulSoup(data2)
     bs = bs4.BeautifulSoup(data)
