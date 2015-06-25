@@ -108,5 +108,5 @@ def getTPB():
     output += "</ul>"
     return output, outputDetail
 
-        
+
 # print getTPB()
