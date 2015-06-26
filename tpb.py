@@ -36,7 +36,6 @@ def cullMovies(movies):
         # then ignore the 720p one
         if("720p" in name):
             tocheck = name.replace("720p","1080p")
-            # print tocheck, tocheck in names
             if(tocheck in names):
                 continue
 
@@ -47,17 +46,9 @@ def cullMovies(movies):
 
 
 def torrents():
-    # data = open("tpb.txt", "r").read().strip().split("\n")
-    # data2 = open("tpb.txt", "r").read()
     baseurl = "https://thepiratebay.mn"
-    # data = urllib2.urlopen(baseurl+"/top/207").read()
     cmd = "curl -s -m 20 " + baseurl + "/top/207"
-    # print cmd
     status,data = commands.getstatusoutput(cmd)
-
-    # print data
-    # print data2
-    # bs = bs4.BeautifulSoup(data2)
     bs = bs4.BeautifulSoup(data)
 
     movies = []
@@ -66,10 +57,8 @@ def torrents():
         if(a is not None):
             name = a.text
             link = a['href']
-            # /torrent/11049465/Million_Dollar_Arm_
             link = link.split("/")[:3]
             link = baseurl + "/".join(link)+"/"
-            # print baseurl+a['href']
         else:
             continue
 
@@ -82,13 +71,13 @@ def torrents():
         mult = 1024.0 if size[-1] == 'GiB' else 1
         size = float(size[0])*mult
         uploader = uploader.split()[-1]
-        # print date, size, uploader
         movies.append( [ name, date, size, uploader, link ] )
-        # print tr.find('div').find('a').text
 
     return cullMovies(movies)
 
 def getTPB():
+    import movieRater
+
     output = ""
     outputDetail = ""
 
@@ -105,10 +94,17 @@ def getTPB():
         output += "Additionally, I found these recent movie torrents:"
     output += "<ul>"
 
-    # movies = cullMovies(movies)
     for movie in movies:
         name, date, link = movie
-        output += "<li>%s (%s)</li>" % (name, link)
+
+        try:
+            movieName = name.split("(")[0]
+            movieYear = name.split("(")[1].split(")")[0]
+            rating, imdbID = movieRater.getMovieRating(movieName, movieYear, True)
+            if(rating > 5.0):
+                output += "<li>%s (%s) RATING: <b>%s</b> (http://www.imdb.com/title/%s/)</li>" % (name, link, rating, imdbID)
+        except:
+            output += "<li>%s (%s)</li>" % (name, link)
         
     output += "</ul>"
     return output, outputDetail
