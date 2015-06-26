@@ -46,7 +46,15 @@ def formatPrint(sep, text):
 sep = "<br>"
 body = "Hi Nick,"+sep*2
 
-import tv, weather, move, tpb, barc, snt, fb, arxiv, modified
+import tv,
+import weather
+import move
+import tpb
+import barc
+import snt
+import fb
+import arxiv
+# import modified
 
 
 weoutput, weoutputDetail = weather.getWeather()
@@ -65,8 +73,8 @@ fboutput, fboutputDetail = fb.getFB(8.0)
 print "got fb output"
 arxivoutput, arxivoutputDetail = arxiv.getArxiv()
 print "got arxiv output"
-modifiedoutput, modifiedoutputDetail = modified.getModified()
-print "got modified site output"
+# modifiedoutput, modifiedoutputDetail = modified.getModified()
+# print "got modified site output"
 
 # summary content
 body +=                  weoutput
@@ -77,7 +85,7 @@ body += formatPrint(sep, sntoutput)
 body += formatPrint(sep, arxivoutput)
 body += formatPrint(sep, moveoutput)
 body += formatPrint(sep, fboutput)
-body += formatPrint(sep, modifiedoutput)
+# body += formatPrint(sep, modifiedoutput)
 
 # salutation
 body += sep*2
@@ -94,7 +102,7 @@ body += formatPrint(sep, arxivoutputDetail)
 body += formatPrint(sep, barcoutputDetail)
 body += formatPrint(sep, sntoutputDetail)
 body += formatPrint(sep, fboutputDetail)
-body += formatPrint(sep, modifiedoutputDetail)
+# body += formatPrint(sep, modifiedoutputDetail)
 
 # print body
 if sendMail("Status update for %s" % datetime.date.today(),body):
