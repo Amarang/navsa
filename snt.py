@@ -12,7 +12,7 @@ import datetime
 def getSNT():
     output, outputDetail = "", ""
     if( datetime.datetime.now().isoweekday() in [2, 5] ):
-        output += "There's an SNT meeting at 9:30am today. Vidyo link: http://goo.gl/UKQYzp"
+        output += "There's an SNT meeting at 9:30am today. Vidyo link: https://goo.gl/k3X6Is"
 
     return output, outputDetail
 
