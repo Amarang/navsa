@@ -46,7 +46,7 @@ def formatPrint(sep, text):
 sep = "<br>"
 body = "Hi Nick,"+sep*2
 
-import tv,
+import tv
 import weather
 import move
 import tpb
