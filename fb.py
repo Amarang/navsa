@@ -3,6 +3,7 @@ from datetime import datetime
 from datetime import timedelta
 
 def getFB(timeInterval):
+    timeInterval = config.facebook['timeInterval']
     notifications = []
     output, outputDetail = "", ""
     numNotifications = 0
