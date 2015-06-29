@@ -69,7 +69,7 @@ barcoutput, barcoutputDetail = barc.getBARC()
 print "got barc output"
 sntoutput, sntoutputDetail = snt.getSNT()
 print "got snt output"
-fboutput, fboutputDetail = fb.getFB(8.0)
+fboutput, fboutputDetail = fb.getFB()
 print "got fb output"
 arxivoutput, arxivoutputDetail = arxiv.getArxiv()
 print "got arxiv output"
