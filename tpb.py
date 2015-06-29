@@ -90,10 +90,9 @@ def getTPB():
 
     print "got torrents"
 
-    if(len(movies) > 0):
-        output += "Additionally, I found these recent movie torrents:"
-    output += "<ul>"
+    initialpart = "Additionally, I found these recent movie torrents: <ul>"
 
+    nmovies = 0
     for movie in movies:
         name, date, link = movie
 
@@ -102,11 +101,15 @@ def getTPB():
             movieYear = name.split("(")[1].split(")")[0]
             rating, imdbID = movieRater.getMovieRating(movieName, movieYear, True)
             if(rating > 5.0):
+                nmovies += 1
                 output += "<li>%s (%s) RATING: <b>%s</b> (http://www.imdb.com/title/%s/)</li>" % (name, link, rating, imdbID)
         except:
             output += "<li>%s (%s)</li>" % (name, link)
+            nmovies += 1
         
-    output += "</ul>"
+    if nmovies > 0:
+        output = initialpart + output
+        output += "</ul>"
     return output, outputDetail
 
 
