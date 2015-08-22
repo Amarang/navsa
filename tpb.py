@@ -29,7 +29,7 @@ def cullMovies(movies):
         m = re.search("\(([0-9]{4})\)", name)
         if(m): 
             year = int(m.groups()[0])
-            if year != thisYear:
+            if year != thisYear or year != thisYear-1:
                 continue
        
         # if this is 720p and we have a 1080p version, 
