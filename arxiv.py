@@ -3,9 +3,8 @@ import config
 from dateutil.parser import parse
 
 
-def getPapers():
-    category = config.arxiv['field']
-    data = urllib2.urlopen("http://export.arxiv.org/api/query?search_query=cat:%s&start=0&max_results=10&sortBy=submittedDate&sortOrder=descending" % category).read()
+def getPapers(category):
+    data = urllib2.urlopen("http://export.arxiv.org/api/query?search_query=cat:%s&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending" % category).read()
 
     # data = open("arxivapi.txt").read()
 
@@ -45,7 +44,10 @@ def getArxiv():
     output = ""
     outputDetail = ""
 
-    recentpapers, papers = getPapers()
+    recentpapers1, papers1 = getPapers(config.arxiv['field1'])
+    recentpapers2, papers2 = getPapers(config.arxiv['field2'])
+    recentpapers = recentpapers1 + recentpapers2
+    papers = papers1 + papers2
     print "got papers"
 
     if(len(recentpapers) > 0):
@@ -69,5 +71,6 @@ def getArxiv():
 
     return output, outputDetail
 
-# print getArxiv()
 
+if __name__=='__main__':
+    print getArxiv()
