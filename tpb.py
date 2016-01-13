@@ -75,7 +75,7 @@ def torrents():
 
     return cullMovies(movies)
 
-def getTPB():
+def getData():
     import movieRater
 
     output = ""

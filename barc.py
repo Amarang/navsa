@@ -15,7 +15,7 @@ def getBalance():
             balance = "".join([e for e in balance if e in "-0123456789."])
             return balance
 
-def getBARC():
+def getData():
     output = ""
     outputDetail = ""
 
@@ -42,4 +42,5 @@ def getBARC():
 
     return output, outputDetail
 
-# print getBARC()
+if __name__=='__main__':
+    print getBARC()

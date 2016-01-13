@@ -52,7 +52,7 @@ def showInfo(show, rating=-1.0):
 
 
 
-def getMovies():
+def getData():
 
     url = "http://api.tvmedia.ca/tv/v2/lineups/2433/listings?api_key=1a8889539bd4d38cfef23821b8dbb0de&end=%s+00%%3A00%%3A00" % ( datetime.date.today()+datetime.timedelta(days=1) )
     # print url

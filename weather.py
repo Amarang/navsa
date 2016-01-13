@@ -87,7 +87,7 @@ def summary( cur, fc ):
     return response
 
 
-def getWeather():
+def getData():
     output = ""
     outputDetail = ""
 
