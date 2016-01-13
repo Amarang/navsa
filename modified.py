@@ -4,7 +4,7 @@ from dateutil.parser import parse
 
 import config
 
-def getModified():
+def getData():
 
     output = ""
     outputDetail = ""

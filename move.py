@@ -11,7 +11,7 @@ import delta
 # https://maps.google.com/locationhistory/b/0/kml?startTime=1373666400000&endTime=1373752800000
 # in developer tools pane, go to network tab and right click on the kml?startTime= entry and get the curl information, paste below and make appropriate modifications
 
-def getWalk(numDays=1):
+def getData(numDays=1):
     output = ""
     outputDetail = ""
 

@@ -40,7 +40,7 @@ def getPapers(category):
     return recentpapers, papers
 
 
-def getArxiv():
+def getData():
     output = ""
     outputDetail = ""
 
