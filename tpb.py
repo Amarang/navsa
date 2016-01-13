@@ -13,8 +13,8 @@ def cullMovies(movies):
     goodmovies = []
     for movie in movies:
         name, date, size, uploader, link = movie
-        if(uploader != 'YIFY'): continue
-        if(size > 3000): continue
+        # if(uploader != 'YIFY'): continue
+        if(size > 1000): continue
         try:
             d1 = parse(date)
             days = (datetime.datetime.today() - d1).days
@@ -113,4 +113,5 @@ def getTPB():
     return output, outputDetail
 
 
-# print getTPB()
+if __name__=='__main__':
+    print getTPB()
