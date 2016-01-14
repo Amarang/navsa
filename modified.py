@@ -33,5 +33,5 @@ def getData():
 
     return output, outputDetail
 
-        # print url, name, hours
-# getModified()
+if __name__=='__main__':
+    print getData()

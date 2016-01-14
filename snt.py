@@ -1,19 +1,11 @@
 import datetime
 
-# ISOWEEKDAY
-#         1: "Monday",
-#         2: "Tuesday",
-#         3: "Wednesday",
-#         4: "Thursday",
-#         5: "Friday",
-#         6: "Saturday",
-#         7: "Sunday",
-
 def getData():
     output, outputDetail = "", ""
-    if( datetime.datetime.now().isoweekday() in [2, 5] ):
+    if( datetime.datetime.now().isoweekday() in [2, 5] ): # Tuesday, Friday
         output += "There's an SNT meeting at 9:30am today. Vidyo link: https://vidyoportal.cern.ch/flex.html?roomdirect.html&key=eQuolbviCq96Fdc7pGgbcPdIY"
 
     return output, outputDetail
 
-# print getSNT()
+if __name__=='__main__':
+    print getData()

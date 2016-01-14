@@ -152,4 +152,5 @@ def getData():
     return output, outputDetail
 
 
-# getMovies()
+if __name__=='__main__':
+    print getData()

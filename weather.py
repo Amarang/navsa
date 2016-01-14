@@ -102,4 +102,5 @@ def getData():
     output += summary( cur, fc )
     return output, outputDetail
 
-# main()
+if __name__=='__main__':
+    print getData()

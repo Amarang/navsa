@@ -73,4 +73,4 @@ def getData():
 
 
 if __name__=='__main__':
-    print getArxiv()
+    print getData()
