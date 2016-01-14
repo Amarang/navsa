@@ -36,7 +36,7 @@ data = {}
 
 for moduleName in moduleNames:
     try:
-        module = __import__(moduleName)
+        module = __import__("modules.%s" % moduleName, fromlist=[''])
         output, outputDetail = module.getData()
         data[moduleName] = [output,outputDetail]
         print "got %s" % moduleName
