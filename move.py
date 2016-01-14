@@ -91,3 +91,5 @@ def getData(numDays=1):
 
     return output, outputDetail
 
+if __name__=='__main__':
+    print getData()

@@ -114,4 +114,4 @@ def getData():
 
 
 if __name__=='__main__':
-    print getTPB()
+    print getData()

@@ -43,4 +43,4 @@ def getData():
     return output, outputDetail
 
 if __name__=='__main__':
-    print getBARC()
+    print getData()

@@ -2,7 +2,7 @@ import bs4, urllib, re, time, config
 from datetime import datetime
 from datetime import timedelta
 
-def getFB():
+def getData():
     timeInterval = config.facebook['timeInterval']
     notifications = []
     output, outputDetail = "", ""
@@ -44,5 +44,5 @@ def getFB():
             # outputDetail += "\n\t- %s" % (notification)
     return output, outputDetail
 
-# for i in getFB():
-#     print i
+if __name__=='__main__':
+    print getData()
