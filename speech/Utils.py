@@ -1,6 +1,10 @@
 import datetime, time
 import os, sys
 
+def web(filename,user="namin"):
+    os.system("scp %s %s@uaf-8.t2.ucsd.edu:~/public_html/dump/ >& /dev/null" % (filename, user))
+    print "Copied to uaf-8.t2.ucsd.edu/~%s/dump/%s" % (user, filename.split("/")[-1])
+
 def say(text):
     if "linux" in sys.platform.lower(): # linux2 (office pi)
         os.system('(espeak -w temp.wav "%s" && aplay temp.wav) & ' % text) # does not slow down after a few words
