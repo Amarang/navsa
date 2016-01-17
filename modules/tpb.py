@@ -26,18 +26,20 @@ def cullMovies(movies):
             # consideration anyways
             pass
 
+
         m = re.search("\(([0-9]{4})\)", name)
         if(m): 
             year = int(m.groups()[0])
             if year != thisYear and year != thisYear-1:
                 continue
        
-        # if this is 720p and we have a 1080p version, 
-        # then ignore the 720p one
-        if("720p" in name):
-            tocheck = name.replace("720p","1080p")
-            if(tocheck in names):
-                continue
+
+        # # if this is 720p and we have a 1080p version, 
+        # # then ignore the 720p one
+        # if("720p" in name):
+        #     tocheck = name.replace("720p","1080p")
+        #     if(tocheck in names):
+        #         continue
 
         goodmovies.append( [name, date, link] )
 
@@ -46,7 +48,7 @@ def cullMovies(movies):
 
 
 def torrents():
-    baseurl = "https://thepiratebay.mn"
+    baseurl = "https://thepiratebay.se"
     cmd = "curl -s -m 20 " + baseurl + "/top/207"
     status,data = commands.getstatusoutput(cmd)
     bs = bs4.BeautifulSoup(data)
@@ -63,7 +65,6 @@ def torrents():
             continue
 
         desc = tr.find('font')
-        # print desc.text
         date, size, uploader = desc.text.split(",")
         date = date.replace("Uploaded", "").strip()
         date = " ".join(date.split())
@@ -90,7 +91,7 @@ def getData():
 
     print "got torrents"
 
-    initialpart = "Additionally, I found these recent movie torrents: <ul>"
+    initialpart = "I found these recent movie torrents: <ul>"
 
     nmovies = 0
     for movie in movies:

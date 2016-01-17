@@ -3,7 +3,7 @@ import urllib, urllib2, datetime, json
 # NAVSA - Not A Very Sophisticated Assistant
 def sendMail(subject, body):
     url = 'https://api.mailgun.net/v2/sandbox96042724eeb049af864d017016a510a3.mailgun.org/messages'
-    body = body.encode('ascii', 'ignore')
+    # body = body.encode('ascii', 'ignore')
     values = {
             'to' : 'typhoid.pwns@gmail.com',
             'subject' : subject,
@@ -31,7 +31,7 @@ def sendMail(subject, body):
         successful = False
     return successful
 
-moduleNames = [ "weather", "tv", "move", "tpb", "barc", "snt", "fb", "arxiv", "debit" ]
+moduleNames = [ "weather", "tv", "tpb", "barc", "snt", "fb", "arxiv", "debit" ]
 data = {}
 
 for moduleName in moduleNames:
@@ -46,8 +46,8 @@ for moduleName in moduleNames:
 sep = "<br>"
 body = "Hi Nick,"+sep*2
 
-summaries = ["weather", "tv", "tpb", "barc", "snt", "arxiv", "move", "debit", "fb"]
-details = ["weather", "move", "tv", "tpb", "arxiv", "barc", "snt", "debit", "fb"]
+summaries = ["weather", "tv", "tpb", "barc", "snt", "arxiv", "debit", "fb"]
+details = ["tv", "tpb", "arxiv", "barc", "snt", "debit", "fb"]
 for summary in summaries:
     try:
         text = data[summary][0]
@@ -55,7 +55,7 @@ for summary in summaries:
             body += sep*2
         body += text
     except:
-        pass
+        print "[warning] couldn't get summary for %s" % summary
 
 # salutation
 body += sep*2
@@ -65,12 +65,13 @@ body += "<hr>"
 
 for detail in details:
     try:
-        text = data[detail][0]
+        text = data[detail][1]
         if len(text) > 1:
             body += sep*2
         body += text
     except:
-        pass
+        print "[warning] couldn't get details for %s" % detail
+
 
 if sendMail("Status update for %s" % datetime.date.today(),body):
     print "email sent successfully!"

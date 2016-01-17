@@ -14,7 +14,7 @@ def getAmount(body):
 
 def getData():
     account = gmaillib.account(config.gmail['u'], config.gmail['p'])
-    msgs = account.inbox(start=0,amount=20)
+    msgs = account.inbox(start=0,amount=10)
     transactions = []
     # print msgs
     for msg in msgs:
@@ -35,7 +35,7 @@ def getData():
         today = datetime.datetime.now()
         yesterday = (today-date).days == 0
 
-        # if not yesterday: continue # FIXME enable again
+        if not yesterday: continue
 
         transactions.append( {"type": debOrCred, "amount": amount, "time": date} )
 
@@ -50,7 +50,7 @@ def getData():
         for trans in transactions:
             if trans["type"] == "debit": totDebits += trans["amount"]
             elif trans["type"] == "credit": totCredits += trans["amount"]
-            outputDetail += "<b>%s</b> [%s]: %.2f" % (trans["type"][:3].upper(), trans["time"].strftime("%I:%M%p"), trans["amount"])
+            outputDetail += "<li><b>%s</b> [%s]: %.2f</li>" % (trans["type"][:3].upper(), trans["time"].strftime("%I:%M%p"), trans["amount"])
         outputDetail += "</ul>"
 
         output += "Yesterday, you "
@@ -60,8 +60,8 @@ def getData():
             output += "<font color='red'>spent $%.2f.</font>" % totDebits
         elif totCredits > 0:
             output += "<font color='green'>gained $%.2f.</font>" % totCredits
-        if totDebits > 100:
-            output += "<br><b><font color='red'>Damn! You spent more than $100 yesterday!</font></b>"
+        if totDebits > 50:
+            output += "<br><b><font color='red'>Damn! You spent more than $50 yesterday!</font></b>"
 
         return output, outputDetail
 
