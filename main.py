@@ -3,7 +3,7 @@ import urllib, urllib2, datetime, json
 # NAVSA - Not A Very Sophisticated Assistant
 def sendMail(subject, body):
     url = 'https://api.mailgun.net/v2/sandbox96042724eeb049af864d017016a510a3.mailgun.org/messages'
-    # body = body.encode('ascii', 'ignore')
+    body = body.encode('utf-8')
     values = {
             'to' : 'typhoid.pwns@gmail.com',
             'subject' : subject,
@@ -31,7 +31,8 @@ def sendMail(subject, body):
         successful = False
     return successful
 
-moduleNames = [ "weather", "tv", "tpb", "barc", "snt", "fb", "arxiv", "debit" ]
+moduleNames = [ "weather", "tv", "tpb", "barc", "move", "snt", "fb", "arxiv", "debit" ]
+# moduleNames = [ "weather", "tpb", "barc", "snt", "fb", "arxiv", "debit" ]
 data = {}
 
 for moduleName in moduleNames:
@@ -46,8 +47,8 @@ for moduleName in moduleNames:
 sep = "<br>"
 body = "Hi Nick,"+sep*2
 
-summaries = ["weather", "tv", "tpb", "barc", "snt", "arxiv", "debit", "fb"]
-details = ["tv", "tpb", "arxiv", "barc", "snt", "debit", "fb"]
+summaries = ["weather", "tv", "tpb", "barc", "snt", "arxiv", "debit", "fb", "move"]
+details = ["tv", "tpb", "arxiv", "barc", "snt", "debit", "fb", "move"]
 for summary in summaries:
     try:
         text = data[summary][0]
