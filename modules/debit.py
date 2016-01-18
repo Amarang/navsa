@@ -63,7 +63,7 @@ def getData():
         if totDebits > 50:
             output += "<br><b><font color='red'>Damn! You spent more than $50 yesterday!</font></b>"
 
-        return output, outputDetail
+    return output, outputDetail
 
 if __name__=='__main__':
     print getData()

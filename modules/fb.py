@@ -31,6 +31,8 @@ def getData():
             desc = desc.replace(s,"")
         
         desc = desc.split("CDATA[")[-1].split("]]")[0]
+        desc = desc.decode('utf-8')
+        desc = desc.encode('ascii', 'ignore')
         notifications.append( desc )
        
     if(numNotifications > 0):
