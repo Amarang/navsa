@@ -1,0 +1,7 @@
+
+### toast.exe
+From https://github.com/nels-o/toaster. Used to make notification popups on Windows 8/10. Usage:
+
+`./toast.exe -t "NAVSA" -m "how long can I make this before it wraps to the next line?" -p "D:/Cygwin64/home/Nick/navsa/images/navsalogo.png"`
+
+Note that the windows path is needed for the image file
