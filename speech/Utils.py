@@ -21,6 +21,10 @@ def toast(text, title=""):
         # http://apple.stackexchange.com/questions/57412/how-can-i-trigger-a-notification-center-notification-from-an-applescript-or-shel
         # sounds in /System/Library/Sounds
         os.system("osascript -e 'display notification \"%s\" with title \"%s\" sound name \"Submarine.aiff\"'" % (text, title))
+    elif "cygwin" in sys.platform.lower(): # cygwin (laptop)
+        logopath = "D:/Cygwin64/home/Nick/navsa/images/navsalogo.png"
+        toasterpath = "../bin/toast.exe"
+        os.system("%s -t '%s' -m '%s' -p '%s'" % (toasterpath, title, text, logopath))
 
 def play(fname):
     if "linux" in sys.platform.lower(): # linux2 (office pi)
