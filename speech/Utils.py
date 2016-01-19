@@ -5,15 +5,32 @@ def web(filename,user="namin"):
     os.system("scp %s %s@uaf-8.t2.ucsd.edu:~/public_html/dump/ >& /dev/null" % (filename, user))
     print "Copied to uaf-8.t2.ucsd.edu/~%s/dump/%s" % (user, filename.split("/")[-1])
 
-def say(text):
+def say(text, voice="Samantha"):
     if "linux" in sys.platform.lower(): # linux2 (office pi)
         os.system('(espeak -w temp.wav "%s" && aplay temp.wav) & ' % text) # does not slow down after a few words
     elif "darwin" in sys.platform.lower(): # darwin (office mac)
-        os.system('say -v Vicki "%s" &' % text)
+        if "curry" in text.lower(): voice = "Veena"
+        os.system('say -v %s "%s" &' % (voice, text))
     elif "cygwin" in sys.platform.lower(): # cygwin (laptop)
         os.system('(espeak -w temp.wav "%s" && cat temp.wav > /dev/dsp) & ' % text)
     else:
         os.system('(espeak -w temp.wav "%s" && aplay temp.wav) & ' % text)
+
+def toast(text, title=""):
+    if "darwin" in sys.platform.lower(): # darwin (office mac)
+        # http://apple.stackexchange.com/questions/57412/how-can-i-trigger-a-notification-center-notification-from-an-applescript-or-shel
+        # sounds in /System/Library/Sounds
+        os.system("osascript -e 'display notification \"%s\" with title \"%s\" sound name \"Submarine.aiff\"'" % (text, title))
+
+def play(fname):
+    if "linux" in sys.platform.lower(): # linux2 (office pi)
+        os.system('aplay %s' % fname) # does not slow down after a few words
+    elif "darwin" in sys.platform.lower(): # darwin (office mac)
+        os.system('afplay %s' % fname)
+    elif "cygwin" in sys.platform.lower(): # cygwin (laptop)
+        os.system('cat %s > /dev/dsp' % fname)
+    else:
+        os.system('cat %s > /dev/dsp' % fname)
     
 def toTimestamp(dt):
     return int(time.mktime(dt.timetuple()))
@@ -21,28 +38,23 @@ def toTimestamp(dt):
 def fromTimestamp(ts):
     return datetime.datetime.fromtimestamp(int(ts))
 
-def humanReadableTime(dt=None, sec=None, precision=2, past_tense='{} ago', future_tense='in {}'):
-    if sec:
+def humanReadableTime(dt=None, sec=None, precision=1):
+    if sec is not None:
+        sec = max(sec, 0)
         dt = datetime.timedelta(seconds=sec)
 
-    if type(dt) is not type(datetime.timedelta()):
-        dt = datetime.datetime.now() - dt
-     
-    the_tense = past_tense
-    if dt < datetime.timedelta(0): the_tense = future_tense
+    if dt < datetime.timedelta(0): dt = datetime.timedelta(0)
         
-    dt = abs( dt )
     d = { 
         'year'   : dt.days / 365 ,
         'day'    : dt.days % 365 ,
         'hour'   : dt.seconds / 3600 ,
         'minute' : (dt.seconds / 60) % 60 ,
-        'second' : dt.seconds % 60 ,
-        'microsecond' : dt.microseconds
+        'second' : dt.seconds % 60
     }
     hlist = [] 
     count = 0
-    units = ( 'year', 'day', 'hour', 'minute', 'second', 'microsecond' )
+    units = ( 'year', 'day', 'hour', 'minute', 'second' )
     for unit in units:
         if count >= precision: break # met precision
         if d[ unit ] == 0: continue # skip 0's
@@ -50,7 +62,7 @@ def humanReadableTime(dt=None, sec=None, precision=2, past_tense='{} ago', futur
         hlist.append( '%s %s%s' % ( d[unit], unit, s ) )
         count += 1
     human_delta = ', '.join( hlist )
-    return the_tense.format(human_delta) 
+    return '{}'.format(human_delta) 
 
 # now = datetime.datetime.now()
 # dt = datetime.timedelta(seconds=180)
@@ -58,3 +70,4 @@ def humanReadableTime(dt=None, sec=None, precision=2, past_tense='{} ago', futur
 # print then,now
 # # print humanReadableTime2(dt=now-then)
 # print human(dt=now-then)
+# print humanReadableTime(sec=-1)

@@ -1,6 +1,7 @@
 from bottle import post, route, run, request
 import os, sys
 import urllib, urllib2, json, datetime, time
+import pprint
 import Utils as u
 import Events
 
@@ -12,7 +13,6 @@ import Events
 #   response = urllib2.urlopen(req)
 #   the_page = response.read()
 
-
 API_KEY = "5WGVQPPDHU7JH2J5WDBJHMJLRXB5WDTP"
 
 def getWit(query):
@@ -20,12 +20,6 @@ def getWit(query):
     response = urllib2.urlopen('https://api.wit.ai/message?'+urllib.urlencode(data)).read()
     out = json.loads(response)
     return out
-
-# def say(text):
-#     # return 'espeak "%s" & ' % text
-#     # return '(espeak -w temp.wav "%s" && aplay temp.wav) & ' % text # does not slow down after a few words
-#     return '(espeak -w temp.wav "%s" && cat temp.wav > /dev/dsp) & ' % text # for laptop
-#     # return 'mplayer -ao alsa -noconsolecontrols "http://translate.google.com/translate_tts?tl=en&client=t&q=%s" & ' % text # occasionally gets rate-limited
 
 def wit(words):
     intent = None
@@ -56,6 +50,18 @@ def wit(words):
         dt = when - now
         events.addEvent(now, when, "ALARM")
 
+    elif intent == "onoff":
+        # seconds = out["outcomes"][0]["entities"]["duration"][0]["normalized"]["value"] # seconds
+        # print out["outcomes"]
+        onoff = str(out["outcomes"][0]["entities"]["on_off"][0]["value"])
+        u.say("Turning lights %s" % onoff)
+        # print out["outcomes"][0]["entities"]["on_off"]["value"]
+
+        # now = datetime.datetime.now()
+        # when = now + datetime.timedelta(seconds=seconds)
+        # dt = when - now
+        # events.addEvent(now, when, "ALARM")
+
 def handleWords(words,reqType=None):
     if reqType == "meterMaker":
         u.say(words)
@@ -71,13 +77,11 @@ def handleWords(words,reqType=None):
           or "what is name" in words
           or "his name his" in words
           or "whats the name" in words  ):
-          # os.system('aplay johncena_nointro.wav')
-          os.system('cat johncena_nointro.wav > /dev/dsp')
+          u.play("johncena_nointro.wav")
           return
 
       if("john cena" in words):
-          os.system('cat johncena.wav > /dev/dsp')
-          # os.system('aplay johncena.wav')
+          u.play("johncena.wav")
           return
 
       if(words.strip().lower().startswith("say")): 
@@ -90,7 +94,6 @@ def handleWords(words,reqType=None):
 
     u.say(words)
     return
-    # return 'say -v Vicki "%s" &' % words # MAC
 
 @post('/say')
 def getWords():
