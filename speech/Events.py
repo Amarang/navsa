@@ -15,7 +15,7 @@ class Events:
         self.TIMEFILE=timefile # output/input file
         self.doLoop = False
 
-        self.shelf = shelve.open(TIMEFILE, writeback=True)
+        self.shelf = shelve.open(TIMEFILE.replace(".db",""), writeback=True)
 
         if(len(self.shelf.keys()) < 1): self.shelf["events"] = [] # empty db
 
@@ -59,6 +59,7 @@ class Events:
             words = "Nick, %s ago you asked me to remind you to %s" % (u.humanReadableTime(dt=dt), action)
         print "[times] %s" % words
         u.say(words)
+        u.toast(words, action)
 
     def addEvent(self,dta,dtb,action):
         self.shelf["events"].append([dta, dtb, action])
