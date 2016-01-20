@@ -16,6 +16,14 @@ def say(text, voice="Samantha"):
     else:
         os.system('(espeak -w temp.wav "%s" && aplay temp.wav) & ' % text)
 
+def sayFromMac(text, voice="Samantha"):
+    os.system("ssh -q namin@squark.physics.ucsb.edu 'cd ~/sandbox/sound ; say -v %s \"%s\" -o temp.aiff ; /usr/local/bin/sox temp.aiff temp.wav ' ; scp -q namin@squark.physics.ucsb.edu:~/sandbox/sound/temp.wav ." % (voice, text))
+
+    if "linux" in sys.platform.lower(): # linux2 (office pi)
+        os.system('aplay temp.wav &')
+    elif "cygwin" in sys.platform.lower(): # cygwin (laptop)
+        os.system('(cat temp.wav > /dev/dsp) & ')
+
 def toast(text, title=""):
     if "darwin" in sys.platform.lower(): # darwin (office mac)
         # http://apple.stackexchange.com/questions/57412/how-can-i-trigger-a-notification-center-notification-from-an-applescript-or-shel
