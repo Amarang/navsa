@@ -24,7 +24,7 @@ def sayFromMac(text, voice="Samantha"):
     elif "cygwin" in sys.platform.lower(): # cygwin (laptop)
         os.system('(cat temp.wav > /dev/dsp) & ')
 
-def sayCereproc(text, voice="Hannah"):
+def sayCereproc(text, voice="Jess"): # also try Hannah
     # https://cereproc.com live demo
     cereprocpath = "../bin/cereproc.sh"
     output="temp.wav"
