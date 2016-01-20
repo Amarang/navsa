@@ -24,6 +24,20 @@ def sayFromMac(text, voice="Samantha"):
     elif "cygwin" in sys.platform.lower(): # cygwin (laptop)
         os.system('(cat temp.wav > /dev/dsp) & ')
 
+def sayCereproc(text, voice="Hannah"):
+    # https://cereproc.com live demo
+    cereprocpath = "../bin/cereproc.sh"
+    output="temp.wav"
+    key="yveys9w8hipsc3di"
+    os.system("%s -v %s -o %s -k %s -t \"%s\"" % (cereprocpath, voice, output, key, text))
+
+    if "linux" in sys.platform.lower(): # linux2 (office pi)
+        os.system('aplay temp.wav &')
+    elif "cygwin" in sys.platform.lower(): # cygwin (laptop)
+        os.system('(cat temp.wav > /dev/dsp) & ')
+    elif "darwin" in sys.platform.lower(): # darwin (office mac)
+        os.system('afplay temp.wav &')
+
 def toast(text, title=""):
     if "darwin" in sys.platform.lower(): # darwin (office mac)
         # http://apple.stackexchange.com/questions/57412/how-can-i-trigger-a-notification-center-notification-from-an-applescript-or-shel
