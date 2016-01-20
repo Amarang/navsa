@@ -14,6 +14,7 @@ import Events
 #   the_page = response.read()
 
 API_KEY = "5WGVQPPDHU7JH2J5WDBJHMJLRXB5WDTP"
+sounddir = "../sounds/"
 
 def getWit(query):
     data = {'access_token' : API_KEY, 'q' : query }
@@ -77,11 +78,11 @@ def handleWords(words,reqType=None):
           or "what is name" in words
           or "his name his" in words
           or "whats the name" in words  ):
-          u.play("johncena_nointro.wav")
+          u.play(sounddir+"johncena_nointro.wav")
           return
 
       if("john cena" in words):
-          u.play("johncena.wav")
+          u.play(sounddir+"johncena.wav")
           return
 
       if(words.strip().lower().startswith("say")): 
