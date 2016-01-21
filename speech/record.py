@@ -1,11 +1,12 @@
 import pyaudio
 import wave
+from tqdm import tqdm 
  
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 11025
 CHUNK = 256
-RECORD_SECONDS = 5
+RECORD_SECONDS = 15
 WAVE_OUTPUT_FILENAME = "test.wav"
 
 audio = pyaudio.PyAudio()
@@ -16,7 +17,7 @@ stream = audio.open(format=FORMAT,channels=CHANNELS,rate=RATE,input=True,frames_
 print "recording..."
 frames = []
  
-for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
+for i in tqdm(range(0, int(RATE / CHUNK * RECORD_SECONDS))):
     data = stream.read(CHUNK)
     frames.append(data)
 print "finished recording"

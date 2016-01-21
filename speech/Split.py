@@ -1,4 +1,5 @@
 import wave, os
+from tqdm import tqdm
 import matplotlib as mpl
 mpl.use('Agg')
 import numpy as np
@@ -42,7 +43,7 @@ class Splitter:
         maf = []
         v = np.array(v, dtype="int32")
         N = len(v)
-        for i in range(N):
+        for i in tqdm(range(N)):
             if i < window:
                 maf.append(0.0)
                 s += v[i]
@@ -109,53 +110,36 @@ class Splitter:
             out.close()
             print "[Split] saved %s" % filename
 
-    def getWaveform(self):
-        return self.data
-
-    def getSmoothWaveform(self):
-        return self.smooth
-
-    def getRanges(self):
-        return self.ranges
+    def getWaveform(self): return self.data
+    def getSmoothWaveform(self): return self.smooth
+    def getRanges(self): return self.ranges
+    def getFramerate(self): return self.framerate
+    def getSubsamples(self): return self.subsamples
 
 if __name__=='__main__':
     sp = Splitter()
     fig, axs = plt.subplots(nrows=2, ncols=2) 
     fig.set_size_inches(18.0,10.0)
 
-    sp.doSplit("navsa.wav")
-    sp.saveSubsamples("test/")
+    sp.doSplit("oknavsa.wav")
+    # sp.saveSubsamples("test/")
     axs[0,0].plot(sp.getWaveform(), 'b')
     axs[0,0].plot(sp.getSmoothWaveform(), 'r')
     for left,right in sp.getRanges():
         axs[0,0].axvspan(left, right, alpha=0.25, color='grey')
 
-    sp.doSplit("sentence.wav")
-    axs[0,1].plot(sp.getWaveform(), 'b')
-    axs[0,1].plot(sp.getSmoothWaveform(), 'r')
-    for left,right in sp.getRanges():
-        axs[0,1].axvspan(left, right, alpha=0.25, color='grey')
+    # sp.doSplit("sentence.wav")
+    # axs[0,1].plot(sp.getWaveform(), 'b')
+    # axs[0,1].plot(sp.getSmoothWaveform(), 'r')
+    # for left,right in sp.getRanges():
+    #     axs[0,1].axvspan(left, right, alpha=0.25, color='grey')
 
-    sp.doSplit("words.wav")
-    axs[1,0].plot(sp.getWaveform(), 'b')
-    axs[1,0].plot(sp.getSmoothWaveform(), 'r')
-    for left,right in sp.getRanges():
-        axs[1,0].axvspan(left, right, alpha=0.25, color='grey')
+    # sp.doSplit("words.wav")
+    # axs[1,0].plot(sp.getWaveform(), 'b')
+    # axs[1,0].plot(sp.getSmoothWaveform(), 'r')
+    # for left,right in sp.getRanges():
+    #     axs[1,0].axvspan(left, right, alpha=0.25, color='grey')
 
     fig.savefig("test.png", bbox_inches='tight')
     u.web("test.png")
 
-
-# WRITE IT
-
-# print invRanges
-# for irange,(left,right) in enumerate(invRanges):
-#     out = wave.open("test/out_%i.wav" % irange, "wb")
-#     out.setnchannels(fin.getnchannels())
-#     out.setsampwidth(fin.getsampwidth())
-#     out.setframerate(fin.getframerate())
-#     out.setnframes(right-left)
-#     out.writeframes( pdata[left:right].tostring() )
-#     out.close()
-
-    # break
