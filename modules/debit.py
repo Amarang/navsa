@@ -4,13 +4,13 @@ import datetime
 
 # https://github.com/thedjpetersen/gmaillib
 
-def getAmount(body):
-        s = re.search( r'Amount: \$([0-9\-\.\,]+)', body)
-        value = 0.0
+def getAmounts(body):
+        s = re.findall( r'Amount: \$([0-9\-\.\,]+)', body)
+        values = []
         try:
-            if s: value = float(s.group(1).replace(",",""))
+            if s: values = map(lambda x: float(x.replace(",","")),s)
         except: pass
-        return value
+        return values
 
 def getData():
     account = gmaillib.account(config.gmail['u'], config.gmail['p'])
@@ -30,14 +30,17 @@ def getData():
         elif "direct deposit" in msg.subject and "Transaction type: ACH CREDIT" in msg.body: debOrCred = "credit"
         else: continue
 
-        amount = getAmount(msg.body)
+        amounts = getAmounts(msg.body)
         date = parse(msg.date).replace(tzinfo=None)
         today = datetime.datetime.now()
         yesterday = (today-date).days == 0
 
+        if len(amounts) < 1: continue
+
         if not yesterday: continue
 
-        transactions.append( {"type": debOrCred, "amount": amount, "time": date} )
+        for amount in amounts:
+            transactions.append( {"type": debOrCred, "amount": amount, "time": date} )
 
 
     output, outputDetail = "", ""
