@@ -11,7 +11,7 @@ import scipy.ndimage as ndimage
 import scipy.ndimage.filters as filters
 
 class Fingerprinter:
-    def __init__(self,NEIGHBORHOOD_SIZE=15, THRESHOLD=4, WINDOWSIZE=256, DOFASTSMOOTH=False):
+    def __init__(self,NEIGHBORHOOD_SIZE=8, THRESHOLD=0.3, WINDOWSIZE=128, DOFASTSMOOTH=False):
 
         # self.NWINDOWS = NWINDOWS
         self.WINDOWSIZE = WINDOWSIZE
@@ -37,7 +37,6 @@ class Fingerprinter:
     def makeSpectrogram(self):
         # self.Pxx, self.freqs, self.times, _ = plt.specgram(self.data, Fs = self.framerate, NFFT=self.NWINDOWS, noverlap=self.NWINDOWS//2)
         self.freqs, self.times, self.Pxx = scipy.signal.spectrogram(self.data, fs = self.framerate, nperseg=self.WINDOWSIZE)
-        print self.Pxx
         self.Pxx = np.log(self.Pxx)
         
         if self.DOFASTSMOOTH:
@@ -46,7 +45,10 @@ class Fingerprinter:
             self.Pxx = self.Pxx[:,range(0,len(self.Pxx[0]),2)] # every other time
             self.times = self.times[::2]
         else:
-            self.Pxx = ndimage.filters.gaussian_filter(self.Pxx, 2, mode='nearest')
+            self.Pxx = ndimage.filters.gaussian_filter(self.Pxx, 1, mode='nearest')
+
+        self.Pxx -= self.Pxx.min() # raise lowest to 0
+        self.Pxx /= self.Pxx.max() # scale highest to 1
 
     def getSpectrogram(self):
         if self.Pxx is None:

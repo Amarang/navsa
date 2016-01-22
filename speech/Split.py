@@ -8,7 +8,7 @@ import Utils as u
 
 
 class Splitter:
-    def __init__(self,SILENCE_TIME=0.015, WORD_TIME=0.1, WINDOW_SMOOTH=0.01, THRESHOLD=0.8):
+    def __init__(self,SILENCE_TIME=0.015, WORD_TIME=0.22, WINDOW_SMOOTH=0.006, THRESHOLD=0.5):
 
         self.SILENCE_TIME = SILENCE_TIME # seconds
         self.WORD_TIME = WORD_TIME # seconds
@@ -39,25 +39,10 @@ class Splitter:
 
 
     def movingAverage(self, v, window):
-        s = 0.0
-        maf = []
         v = np.array(v, dtype="int32")
-        N = len(v)
-        for i in tqdm(range(N)):
-            if i < window:
-                maf.append(0.0)
-                s += v[i]
-            elif i==window:
-                s += sum(v[i:i+window+1])
-                maf.append(s / (2.0*window+1))
-            elif window<i<N-window:
-                s += v[i+window] - v[i-window-1]
-                maf.append(s/(2.0*window+1))
-            elif i>=N-window:
-                s -= v[i-window-1]
-                maf.append(s/(2.0*window-(i+window-N)))
-            else: pass
-        return np.array(maf)
+        window = int(window)
+        cumsum = np.cumsum(np.insert(v, 0, 0)) 
+        return (cumsum[window:] - cumsum[:-window]) / window 
 
     def invertRanges(self, ranges, N):
         invRanges = []
@@ -68,18 +53,22 @@ class Splitter:
         return np.array([r for r in invRanges if r[1]-r[0]>self.WORD_TIME*self.framerate])
 
     def speakingRanges(self, a, threshold):
-        nranges = 999
+        # nranges = 999
         ranges = None
         threshold = threshold*np.std(a)
         niters = 0
-        while nranges > 50 and niters < 10:
-            isntzero = np.concatenate(([0], np.less(a, threshold).view(np.int8), [0]))
-            absdiff = np.abs(np.diff(isntzero))
-            ranges = np.where(absdiff == 1)[0].reshape(-1, 2)
-            ranges = [r for r in ranges if r[1]-r[0]>self.SILENCE_TIME*self.framerate]
-            nranges = len(ranges)
-            threshold *= 0.5
-            niters += 1
+        # while nranges > 200 and niters < 10:
+
+        isntzero = np.concatenate(([0], np.less(a, threshold).view(np.int8), [0]))
+        absdiff = np.abs(np.diff(isntzero))
+        ranges = np.where(absdiff == 1)[0].reshape(-1, 2)
+        ranges = [r for r in ranges if r[1]-r[0]>self.SILENCE_TIME*self.framerate]
+            # nranges = len(ranges)
+            # threshold *= 0.5
+            # niters += 1
+            
+        # print threshold, niters
+        
         return self.invertRanges(ranges,len(self.data))
 
     def makeRanges(self):
@@ -93,6 +82,8 @@ class Splitter:
             self.subsamples.append( self.data[left:right] )
 
     def doSplit(self, fname):
+        self.ranges = None
+        self.subsamples = []
         self.readWav(fname)
         self.makeRanges()
         self.makeSubsamples()
