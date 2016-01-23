@@ -5,7 +5,7 @@ from tqdm import tqdm
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 11025
-CHUNK = 256
+CHUNK = 512
 RECORD_SECONDS = 60
 WAVE_OUTPUT_FILENAME = "sounds/test.wav"
 
