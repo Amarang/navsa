@@ -5,6 +5,7 @@ mpl.use('Agg')
 import numpy as np
 import matplotlib.pyplot as plt
 from Split import Splitter
+from Trigger import Trigger
 from Fingerprint import Fingerprinter
 import Utils as u
 import scipy.ndimage as ndimage
@@ -17,10 +18,11 @@ class Processor:
     def __init__(self, Ntime=30, Nfreq=30):
         self.Ntime,self.Nfreq = 30,30
         self.YXtot = []
+        self.clf = None
 
 
 
-    def getFeatures(self, data, framerate, isSignal):
+    def getFeatures(self, data, framerate, isSignal=0):
         fp = Fingerprinter()
         fp.setData(data, framerate)
         times,freqs,Pxx = fp.getSpectrogram()
@@ -46,7 +48,8 @@ class Processor:
 
         clips = os.listdir(basedir)
 
-        sp = Splitter()
+        # sp = Splitter()
+        tr = Trigger()
 
         self.YXtot = []
 
@@ -55,11 +58,26 @@ class Processor:
 
             for clip in clips:
 
-                sp.doSplit(basedir+clip)
-                subsamples = sp.getSubsamples()
-                framerate = sp.getFramerate()
+                # isSignal = int(signalword in clip.lower())
 
-                isSignal = int(signalword in clip.lower())
+                if clip.lower().startswith(signalword):
+                    isSignal = True
+                elif clip.lower().startswith("random"):
+                    isSignal = False
+                else:
+                    continue
+
+
+                # sp.doSplit(basedir+clip)
+                # subsamples = sp.getSubsamples()
+                # framerate = sp.getFramerate()
+
+                tr.readWav(basedir+clip)
+                subsamples = tr.getSubsamples()
+                framerate = tr.getFramerate()
+
+                print "Loading clip %s (isSignal: %i) ==> %i subsamples" % (clip, isSignal, len(subsamples))
+
 
                 for ss in subsamples:
                     img = self.getFeatures(ss, framerate, isSignal)
@@ -73,7 +91,7 @@ class Processor:
         return outputname
 
 
-    def nudge(self, Xtot, Ytot, w=5):
+    def nudge(self, Xtot, Ytot, w=3):
         newXtot = []
         newYtot = np.array([Ytot for _ in range(3)]).ravel(1)
         for x in Xtot:
@@ -93,20 +111,28 @@ class Processor:
 
 
     def trainAndTest(self):
+        self.clf = None
+
         Xtot = self.YXtot[:,range(1,len(self.YXtot[0]))]
         Ytot = self.YXtot[:,0]
 
-        Xtot, Ytot = self.nudge(Xtot,Ytot)
 
-        X_train, X_test, Y_train, Y_test = train_test_split(Xtot, Ytot, test_size=0.75, random_state=42)
+        # Xtot, Ytot = self.nudge(Xtot,Ytot, w=3)
 
-        logistic_classifier = linear_model.LogisticRegression(C=100.0)
+        X_train, X_test, Y_train, Y_test = train_test_split(Xtot, Ytot, test_size=0.15, random_state=42)
+
+        logistic_classifier = linear_model.LogisticRegression(C=1000.0)
         logistic_classifier.fit(X_train, Y_train)
+
+        self.clf = logistic_classifier
 
         # print "Logistic regression using raw pixel features:\n%s\n" % (metrics.classification_report(Y_test,logistic_classifier.predict(X_test)))
 
         print logistic_classifier.score(X_train, Y_train)
         print logistic_classifier.score(X_test, Y_test)
 
-    def predict(self, data):
-        pass
+    def predict(self, features):
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore",category=Warning)
+            return self.clf.predict_proba(features[1:])[0][1]
+
