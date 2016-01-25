@@ -5,6 +5,7 @@ mpl.use('Agg')
 import numpy as np
 import matplotlib.pyplot as plt
 from Split import Splitter
+from Trigger import Trigger
 import Utils as u
 import random
 
@@ -23,7 +24,11 @@ clips = [
     ["random4",56],
     ["random5",62],
     ["oknavsa3",51],
-    ["oknavsa4",48]
+    ["oknavsa4",48],
+
+    ["oknavsa_bg1",4],
+    ["oknavsa_bg2",5],
+    ["oknavsa_bg3",5]
 ]
 
 # params = np.arange(0.1,0.9,0.01) 
@@ -55,17 +60,20 @@ for param in [1]:
     #         THRESHOLD=p4
     #         )
 
-    sp = Splitter(
-            SILENCE_TIME=0.015,
-            WORD_TIME=0.22,
-            WINDOW_SMOOTH=0.006,
-            THRESHOLD=0.5
-            )
+    tr = Trigger()
+
+    # sp = Splitter(
+    #         SILENCE_TIME=0.015,
+    #         WORD_TIME=0.22,
+    #         WINDOW_SMOOTH=0.006,
+    #         THRESHOLD=0.5
+    #         )
 
     abserr = 0
     for clip,nwords in clips:
-        sp.doSplit( "sounds/%s.wav" % clip )
-        nsubsamples = len(sp.getSubsamples())
+        tr.readWav("sounds/%s.wav" % clip )
+        # sp.doSplit( "sounds/%s.wav" % clip )
+        nsubsamples = len(tr.getSubsamples())
         print clip,nwords,nsubsamples
         abserr += abs(nwords - nsubsamples)
 

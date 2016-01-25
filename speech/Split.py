@@ -37,6 +37,15 @@ class Splitter:
         self.sampwidth = fin.getsampwidth()
         self.nframes = fin.getnframes()
 
+    def loadData(self, data, framerate):
+        try:
+            # if data is binary
+            self.data = np.fromstring(data, dtype=self.DTYPE)
+        except:
+            # if data has already been converted
+            self.data = data
+        self.nframes = len(data)
+        self.framerate = framerate
 
     def movingAverage(self, v, window):
         v = np.array(v, dtype="int32")
@@ -47,6 +56,7 @@ class Splitter:
     def invertRanges(self, ranges, N):
         invRanges = []
         newRight = 0
+        # print ranges
         for left, right in ranges:
             invRanges.append([newRight,left])
             newRight = right
@@ -81,10 +91,11 @@ class Splitter:
         for irange,(left,right) in enumerate(self.ranges):
             self.subsamples.append( self.data[left:right] )
 
-    def doSplit(self, fname):
+    def doSplit(self, fname=None):
         self.ranges = None
         self.subsamples = []
-        self.readWav(fname)
+        if fname:
+            self.readWav(fname)
         self.makeRanges()
         self.makeSubsamples()
 
@@ -101,11 +112,24 @@ class Splitter:
             out.close()
             print "[Split] saved %s" % filename
 
+    def getMainSubsample(self, fname=None):
+        if fname:
+            self.doSplit(fname)
+        else:
+            self.doSplit()
+
+        if len(self.subsamples) > 0:
+            return sorted(self.subsamples, key=lambda x: len(x), reverse = True)[0]
+        else:
+            return None
+
     def getWaveform(self): return self.data
     def getSmoothWaveform(self): return self.smooth
     def getRanges(self): return self.ranges
     def getFramerate(self): return self.framerate
     def getSubsamples(self): return self.subsamples
+
+
 
 if __name__=='__main__':
     sp = Splitter()

@@ -6,7 +6,7 @@ FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 11025
 CHUNK = 512
-RECORD_SECONDS = 60
+RECORD_SECONDS = 15
 WAVE_OUTPUT_FILENAME = "sounds/test.wav"
 
 audio = pyaudio.PyAudio()
