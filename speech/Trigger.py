@@ -1,6 +1,6 @@
 from matplotlib.mlab import find
 import pyaudio, wave, audioop
-import sys, time
+import sys, time, threading
 import matplotlib.pyplot as plt
 import numpy as np
  
@@ -21,6 +21,19 @@ class Trigger:
         self.FALLING_THRESHOLD_RATIO = 0.9 # exit recording when RMS<THRESHOLD*FALLING_THRESHOLD_RATIO
         self.MIN_WORD_TIME = 0.27 # recordings shorter than this (in seconds) are clicks or snaps
         self.MAX_WORD_TIME = 1.2 # recordings longer than this (in seconds) are probably background noise
+        
+        # self.thread = threading.Thread(target=self.loop)
+        # self.thread.setDaemon(True)
+        # def startLoop(self):
+        #     self.doLoop = True
+        #     self.thread.start()
+        # def stopLoop(self):
+        #     self.doLoop = False # doesn't actually kill the thread
+        # def loop(self):
+        #     while self.doLoop:
+        #         self.checkTimes()
+        #         time.sleep(self.DELAY)
+        # events.startLoop()
 
         self.mic = False
 
@@ -29,6 +42,8 @@ class Trigger:
         self.sampwidth = None
         self.nframes = None
         self.data = None
+        self.verbose = False
+        self.training = False
 
         self.latestRMS = np.array([])
         self.means = []
@@ -84,22 +99,25 @@ class Trigger:
         self.framerate = self.stream.getframerate()
         self.sampwidth = self.stream.getsampwidth()
         self.nframes = self.stream.getnframes()
+        self.verbose = verbose
 
-        self.listenLoop(verbose)
+        self.listenLoop()
 
-    def readMic(self,verbose=False):
+    def readMic(self,verbose=False, duration=10, callback=None):
         self.reset()
 
         self.mic = True
+        self.RECORD_SECONDS = duration
         self.audio = pyaudio.PyAudio()
         self.stream = self.audio.open(format=self.FORMAT,channels=self.CHANNELS,rate=self.RATE,input=True,frames_per_buffer=self.CHUNK)
         self.sampwidth = pyaudio.get_sample_size(self.FORMAT)
         self.nframes = self.RECORD_SECONDS * self.RATE
         self.framerate = self.RATE
+        self.verbose = verbose
 
-        self.listenLoop(verbose)
+        self.listenLoop(callback=callback)
 
-    def listenLoop(self,verbose=False):
+    def listenLoop(self, callback=None):
         nLoops = int(self.nframes / self.CHUNK)
         for iloop in range(nLoops):
 
@@ -115,7 +133,7 @@ class Trigger:
             self.means.append(meanRMS)
 
             line = self.drawBar( r1, 0,5000, 50, extra="%.2f %s" % (meanRMS, str(self.recording)) )
-            if verbose:
+            if self.verbose:
                 sys.stdout.write("\r" + line)
                 sys.stdout.flush()
 
@@ -128,6 +146,9 @@ class Trigger:
                     if self.trecording > self.MIN_WORD_TIME:
                         subsample = self.framesToNumpy(self.recframes[:])
                         self.subsamples.append(subsample)
+
+                        if callback is not None:
+                            callback(subsample,framerate=self.framerate)
 
                     self.recs.append(t)
                     self.recording = False
@@ -168,6 +189,9 @@ class Trigger:
         strBuff += "] %5i [%7.1f]" % (upper, theval)
         if len(extra) > 0: strBuff += " ... %s" % extra
         return strBuff
+
+    def setTrainign(self, training=True):
+        self.training = training
 
     def framesToNumpy(self, frames):
         frames = ''.join(frames)

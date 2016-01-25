@@ -18,6 +18,8 @@ class Processor:
     def __init__(self, Ntime=30, Nfreq=30):
         self.Ntime,self.Nfreq = 30,30
         self.YXtot = []
+        self.keywordDurations = []
+        self.DURATION_SIGMA = 2.0
         self.clf = None
 
 
@@ -44,6 +46,10 @@ class Processor:
 
         return img
 
+    def getKeywordDurationRange(self):
+        mu, sig = self.keywordDurations.mean(), self.keywordDurations.std()
+        return [mu - sig*self.DURATION_SIGMA, mu + sig*self.DURATION_SIGMA]
+
     def processTrainingSet(self, basedir="sounds/train/", signalword="oknavsa", savedir="data/"):
 
         clips = os.listdir(basedir)
@@ -52,13 +58,12 @@ class Processor:
         tr = Trigger()
 
         self.YXtot = []
+        self.keywordDurations = []
 
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore",category=Warning)
 
             for clip in clips:
-
-                # isSignal = int(signalword in clip.lower())
 
                 if clip.lower().startswith(signalword):
                     isSignal = True
@@ -68,10 +73,6 @@ class Processor:
                     continue
 
 
-                # sp.doSplit(basedir+clip)
-                # subsamples = sp.getSubsamples()
-                # framerate = sp.getFramerate()
-
                 tr.readWav(basedir+clip)
                 subsamples = tr.getSubsamples()
                 framerate = tr.getFramerate()
@@ -80,10 +81,14 @@ class Processor:
 
 
                 for ss in subsamples:
+                    if isSignal:
+                        self.keywordDurations.append( self.getSampleDuration(ss, framerate) )
                     img = self.getFeatures(ss, framerate, isSignal)
                     self.YXtot.append(img)
 
         self.YXtot = np.array(self.YXtot)
+
+        self.keywordDurations = np.array(self.keywordDurations)
 
         outputname = "%simagedata_%i_%i.npy" % (savedir,self.Nfreq,self.Ntime)
         np.save(outputname, self.YXtot)
@@ -104,6 +109,9 @@ class Processor:
             newXtot.append(left.flatten())
             newXtot.append(right.flatten())
         return np.array(newXtot), newYtot
+
+    def getSampleDuration(self, data, framerate):
+        return 1.0*len(data)/framerate # seconds
 
     def loadTrainData(self, datafile):
         self.Nfreq, self.Ntime = map(int,datafile.split(".")[0].split("_")[-2:])
@@ -128,11 +136,17 @@ class Processor:
 
         # print "Logistic regression using raw pixel features:\n%s\n" % (metrics.classification_report(Y_test,logistic_classifier.predict(X_test)))
 
-        print logistic_classifier.score(X_train, Y_train)
-        print logistic_classifier.score(X_test, Y_test)
+        # print "Score on training set: %.2f" % logistic_classifier.score(X_train, Y_train)
+        # print "Score on testing set: %.2f" % logistic_classifier.score(X_test, Y_test)
 
     def predict(self, features):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore",category=Warning)
+            return self.clf.predict_proba(features[1:])[0][1]
+
+    def getKeywordProbability(self, data, framerate):
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore",category=Warning)
+            features = self.getFeatures(data, framerate)
             return self.clf.predict_proba(features[1:])[0][1]
 
