@@ -17,26 +17,32 @@ def say(text, voice="Samantha"):
         os.system('(espeak -w temp.wav "%s" && aplay temp.wav) & ' % text)
 
 def sayFromMac(text, voice="Samantha"):
-    os.system("ssh -q namin@squark.physics.ucsb.edu 'cd ~/sandbox/sound ; say -v %s \"%s\" -o temp.aiff ; /usr/local/bin/sox temp.aiff temp.wav ' ; scp -q namin@squark.physics.ucsb.edu:~/sandbox/sound/temp.wav ." % (voice, text))
+    cmd = "(ssh -q namin@squark.physics.ucsb.edu 'cd ~/sandbox/sound ; say -v %s \"%s\" -o temp.aiff ; /usr/local/bin/sox temp.aiff temp.wav ' ; scp -q namin@squark.physics.ucsb.edu:~/sandbox/sound/temp.wav . ; " % (voice, text)
 
     if "linux" in sys.platform.lower(): # linux2 (office pi)
-        os.system('aplay temp.wav &')
+        cmd += 'aplay temp.wav ; ) &'
     elif "cygwin" in sys.platform.lower(): # cygwin (laptop)
-        os.system('(cat temp.wav > /dev/dsp) & ')
+        cmd += 'cat temp.wav > /dev/dsp ; ) &'
+
+    # print cmd
+    os.system(cmd)
 
 def sayCereproc(text, voice="Jess"): # also try Hannah
     # https://cereproc.com live demo
     cereprocpath = "../bin/cereproc.sh"
     output="temp.wav"
     key="yveys9w8hipsc3di"
-    os.system("%s -v %s -o %s -k %s -t \"%s\"" % (cereprocpath, voice, output, key, text))
+    cmd = "(%s -v %s -o %s -k %s -t \"%s\" ; " % (cereprocpath, voice, output, key, text)
 
     if "linux" in sys.platform.lower(): # linux2 (office pi)
-        os.system('aplay temp.wav &')
+        cmd += 'aplay temp.wav; ) &'
     elif "cygwin" in sys.platform.lower(): # cygwin (laptop)
-        os.system('(cat temp.wav > /dev/dsp) & ')
+        cmd += 'cat temp.wav > /dev/dsp ; ) &'
     elif "darwin" in sys.platform.lower(): # darwin (office mac)
-        os.system('afplay temp.wav &')
+        cmd += 'afplay temp.wav ; ) &'
+
+    # print cmd
+    os.system(cmd)
 
 def toast(text, title=""):
     if "darwin" in sys.platform.lower(): # darwin (office mac)
@@ -50,13 +56,13 @@ def toast(text, title=""):
 
 def play(fname):
     if "linux" in sys.platform.lower(): # linux2 (office pi)
-        os.system('aplay %s' % fname) # does not slow down after a few words
+        os.system('(aplay %s) &' % fname) # does not slow down after a few words
     elif "darwin" in sys.platform.lower(): # darwin (office mac)
-        os.system('afplay %s' % fname)
+        os.system('(afplay %s) &' % fname)
     elif "cygwin" in sys.platform.lower(): # cygwin (laptop)
-        os.system('cat %s > /dev/dsp' % fname)
+        os.system('(cat %s > /dev/dsp) &' % fname)
     else:
-        os.system('cat %s > /dev/dsp' % fname)
+        os.system('(cat %s > /dev/dsp) &' % fname)
     
 def toTimestamp(dt):
     return int(time.mktime(dt.timetuple()))
@@ -89,6 +95,16 @@ def humanReadableTime(dt=None, sec=None, precision=1):
         count += 1
     human_delta = ', '.join( hlist )
     return '{}'.format(human_delta) 
+
+def timeit(func):
+
+  def wrapper(*arg):
+      t = time.time()
+      res = func(*arg)
+      print "%s took %.2f ms" % (func.func_name, time.time()-t)
+      return res
+
+  return wrapper
 
 # now = datetime.datetime.now()
 # dt = datetime.timedelta(seconds=180)

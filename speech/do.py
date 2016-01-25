@@ -30,18 +30,18 @@ for sample in ["oknavsa", "navsa", "random"]:
     topred = tr.getMainSubsample()
     if topred is None: continue
     topred = proc.getFeatures(topred, tr.getFramerate())
-    print sample, round(proc.predict(topred),3)
+    confidence = round(proc.predict(topred),3)
+    print sample, confidence
 
 print "Done testing samples"
 print "Now will score realtime audio"
 
-# def myCallback(data,framerate):
-#     print "duration: %.2f s, score: %.2f" % (1.0*len(data)/framerate, proc.getKeywordProbability(data, framerate))
-
-# # thread = threading.Thread(target=tr.readMic, kwargs={"verbose":True, "duration":5, "callback":myCallback})
-# thread = threading.Thread(target=tr.readMic, kwargs={"duration":15, "callback":myCallback})
-# thread.start()
-
-# print "Done"
-
-# # thread.join()
+def myCallback(data,framerate):
+    confidence = proc.getKeywordProbability(data, framerate)
+    if confidence > 0.8: u.play("../sounds/notification.wav")
+    print "duration: %.2f s, score: %.2f" % (1.0*len(data)/framerate, confidence)
+# thread = threading.Thread(target=tr.readMic, kwargs={"verbose":True, "duration":5, "callback":myCallback})
+thread = threading.Thread(target=tr.readMic, kwargs={"duration":8, "callback":myCallback})
+thread.start()
+print "Done"
+# thread.join()
