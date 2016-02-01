@@ -31,7 +31,7 @@ def sendMail(subject, body):
         successful = False
     return successful
 
-moduleNames = [ "weather", "tv", "tpb", "barc", "move", "snt", "fb", "arxiv", "debit" ]
+moduleNames = [ "weather", "tv", "tpb", "barc", "move", "snt", "fb", "arxiv", "debit", "quotes" ]
 # moduleNames = [ "weather", "tpb", "barc", "snt", "fb", "arxiv", "debit" ]
 data = {}
 
@@ -47,7 +47,7 @@ for moduleName in moduleNames:
 sep = "<br>"
 body = "Hi Nick,"+sep*2
 
-summaries = ["weather", "tv", "tpb", "barc", "snt", "arxiv", "debit", "fb", "move"]
+summaries = ["weather", "quotes", "tv", "tpb", "barc", "snt", "arxiv", "debit", "fb", "move"]
 details = ["tv", "tpb", "arxiv", "barc", "snt", "debit", "fb", "move"]
 for summary in summaries:
     try:
