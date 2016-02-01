@@ -1,4 +1,4 @@
-import urllib, urllib2, datetime, json
+import urllib, urllib2, datetime, json, sys
 
 # NAVSA - Not A Very Sophisticated Assistant
 def sendMail(subject, body):
@@ -32,7 +32,6 @@ def sendMail(subject, body):
     return successful
 
 moduleNames = [ "weather", "tv", "tpb", "barc", "move", "snt", "fb", "arxiv", "debit", "quotes" ]
-# moduleNames = [ "weather", "tpb", "barc", "snt", "fb", "arxiv", "debit" ]
 data = {}
 
 for moduleName in moduleNames:
@@ -43,6 +42,7 @@ for moduleName in moduleNames:
         print "got %s" % moduleName
     except:
         print "[warning] couldn't get %s" % moduleName
+
 
 sep = "<br>"
 body = "Hi Nick,"+sep*2
