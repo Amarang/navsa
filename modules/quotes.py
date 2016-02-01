@@ -5,8 +5,12 @@ from dateutil.parser import parse
 
 def getQuote():
     quotetype = config.quotes['type']
-    with open("../misc/%s.txt" % quotetype) as fh:
-        data = fh.readlines()
+    try:
+        with open("../misc/%s.txt" % quotetype) as fh:
+            data = fh.readlines()
+    except:
+        with open("misc/%s.txt" % quotetype) as fh:
+            data = fh.readlines()
 
     quote = random.choice(data).strip()
     return "%s: %s" % (quotetype.title(),quote)
