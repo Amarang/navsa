@@ -19,7 +19,7 @@ class Processor:
         self.Ntime,self.Nfreq = 30,30
         self.YXtot = []
         self.keywordDurations = []
-        self.DURATION_SIGMA = 2.0
+        self.DURATION_SIGMA = 3.0
         self.clf = None
 
 
@@ -55,7 +55,7 @@ class Processor:
         clips = os.listdir(basedir)
 
         # sp = Splitter()
-        tr = Trigger()
+        tr = Trigger(training=True)
 
         self.YXtot = []
         self.keywordDurations = []
@@ -129,7 +129,7 @@ class Processor:
 
         X_train, X_test, Y_train, Y_test = train_test_split(Xtot, Ytot, test_size=0.15, random_state=42)
 
-        logistic_classifier = linear_model.LogisticRegression(C=1000.0)
+        logistic_classifier = linear_model.LogisticRegression(C=2.0)
         logistic_classifier.fit(X_train, Y_train)
 
         self.clf = logistic_classifier
