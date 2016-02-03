@@ -1,6 +1,8 @@
 import datetime, time
 import os, sys
 import config
+import requests
+from dateutil import parser
 
 def web(filename,user="namin"):
     os.system("scp %s %s@uaf-8.t2.ucsd.edu:~/public_html/dump/ >& /dev/null" % (filename, user))
@@ -56,6 +58,18 @@ def toTimestamp(dt):
 
 def fromTimestamp(ts):
     return datetime.datetime.fromtimestamp(int(ts))
+
+def parseDatestring(dtstr):
+    return parser.parse(dtstr).replace(tzinfo=None)
+
+def parseOffset(offset):
+    s = 0
+    for unit, val in offset.items():
+        if unit == "seconds": s += val
+        elif unit == "minutes": s += 60*val
+        elif unit == "hours": s += 60*60*val
+        elif unit == "days": s += 24*60*60*val
+    return datetime.timedelta(seconds = s)
 
 def humanReadableTime(dt=None, sec=None, precision=1):
     if sec is not None:
