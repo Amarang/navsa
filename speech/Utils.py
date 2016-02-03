@@ -1,69 +1,56 @@
 import datetime, time
 import os, sys
+import config
 
 def web(filename,user="namin"):
     os.system("scp %s %s@uaf-8.t2.ucsd.edu:~/public_html/dump/ >& /dev/null" % (filename, user))
     print "Copied to uaf-8.t2.ucsd.edu/~%s/dump/%s" % (user, filename.split("/")[-1])
 
-def say(text, voice="Samantha"):
-    if "linux" in sys.platform.lower(): # linux2 (office pi)
-        os.system('(espeak -w temp.wav "%s" && aplay temp.wav) & ' % text) # does not slow down after a few words
-    elif "darwin" in sys.platform.lower(): # darwin (office mac)
-        if "curry" in text.lower(): voice = "Veena"
-        os.system('say -v %s "%s" &' % (voice, text))
-    elif "cygwin" in sys.platform.lower(): # cygwin (laptop)
-        os.system('(espeak -w temp.wav "%s" && cat temp.wav > /dev/dsp) & ' % text)
+def say(text, voice=None):
+    device = config.device
+    say_type = config.say_type[device]
+    if not voice: voice = config.default_voice[say_type]
+
+    cmd = ""
+    if say_type == "cereproc":
+        config.cereprocpath = "../bin/cereproc.sh"
+        output="temp.wav"
+        key="yveys9w8hipsc3di"
+        cmd = "(%s -v %s -o %s -k %s -t \"%s\" ; " % (cereprocpath, voice, output, key, text)
+        if device == "pi": cmd += 'aplay temp.wav; ) &'
+        elif device == "pc": cmd += 'cat temp.wav > /dev/dsp ; ) &'
+        elif device == "mac": cmd += 'afplay temp.wav ; ) &'
+    elif say_type == "fromMac":
+        cmd = """(ssh -q namin@squark.physics.ucsb.edu "cd ~/sandbox/sound ; say -v %s \\'%s\\' -o temp.aiff ; /usr/local/bin/sox temp.aiff temp.wav " ; scp -q namin@squark.physics.ucsb.edu:~/sandbox/sound/temp.wav . ; """ % (voice, text)
+        if device == "pi": cmd += 'aplay temp.wav ; ) &'
+        elif device == "pc": cmd += 'cat temp.wav > /dev/dsp ; ) &'
+    elif say_type == "regular":
+        if device == "pi": cmd = '(espeak -w temp.wav "%s" && aplay temp.wav) & ' % text
+        elif device == "mac": cmd = 'say -v %s "%s" &' % (voice, text)
+        elif device == "pc": cmd = '(espeak -w temp.wav "%s" && cat temp.wav > /dev/dsp) & ' % text
     else:
-        os.system('(espeak -w temp.wav "%s" && aplay temp.wav) & ' % text)
-
-def sayFromMac(text, voice="Samantha"):
-    cmd = "(ssh -q namin@squark.physics.ucsb.edu 'cd ~/sandbox/sound ; say -v %s \"%s\" -o temp.aiff ; /usr/local/bin/sox temp.aiff temp.wav ' ; scp -q namin@squark.physics.ucsb.edu:~/sandbox/sound/temp.wav . ; " % (voice, text)
-
-    if "linux" in sys.platform.lower(): # linux2 (office pi)
-        cmd += 'aplay temp.wav ; ) &'
-    elif "cygwin" in sys.platform.lower(): # cygwin (laptop)
-        cmd += 'cat temp.wav > /dev/dsp ; ) &'
-
-    # print cmd
-    os.system(cmd)
-
-def sayCereproc(text, voice="Jess"): # also try Hannah
-    # https://cereproc.com live demo
-    cereprocpath = "../bin/cereproc.sh"
-    output="temp.wav"
-    key="yveys9w8hipsc3di"
-    cmd = "(%s -v %s -o %s -k %s -t \"%s\" ; " % (cereprocpath, voice, output, key, text)
-
-    if "linux" in sys.platform.lower(): # linux2 (office pi)
-        cmd += 'aplay temp.wav; ) &'
-    elif "cygwin" in sys.platform.lower(): # cygwin (laptop)
-        cmd += 'cat temp.wav > /dev/dsp ; ) &'
-    elif "darwin" in sys.platform.lower(): # darwin (office mac)
-        cmd += 'afplay temp.wav ; ) &'
-
-    # print cmd
-    os.system(cmd)
+        print "unrecognized configuration! voice: %s, device: %s, say_type: %s" % (voice, device, say_type)
+    if cmd: os.system(cmd)
 
 def toast(text, title=""):
-    if "darwin" in sys.platform.lower(): # darwin (office mac)
+    cmd = ""
+    if config.device == "mac":
         # http://apple.stackexchange.com/questions/57412/how-can-i-trigger-a-notification-center-notification-from-an-applescript-or-shel
         # sounds in /System/Library/Sounds
-        os.system("osascript -e 'display notification \"%s\" with title \"%s\" sound name \"Submarine.aiff\"'" % (text, title))
-    elif "cygwin" in sys.platform.lower(): # cygwin (laptop)
-        logopath = "D:/Cygwin64/home/Nick/navsa/images/navsalogo.png"
-        toasterpath = "../bin/toast.exe"
-        os.system("%s -t '%s' -m '%s' -p '%s'" % (toasterpath, title, text, logopath))
+        cmd += "osascript -e 'display notification \"%s\" with title \"%s\" sound name \"Submarine.aiff\"'" % (text, title)
+    elif config.device == "pc":
+        config.logopath = "D:/Cygwin64/home/Nick/navsa/images/navsalogo.png"
+        config.toasterpath = "../bin/toast.exe"
+        cmd += "%s -t '%s' -m '%s' -p '%s'" % (toasterpath, title, text, logopath)
+    if cmd: os.system(cmd)
 
 def play(fname):
-    if "linux" in sys.platform.lower(): # linux2 (office pi)
-        os.system('(aplay %s) &' % fname) # does not slow down after a few words
-    elif "darwin" in sys.platform.lower(): # darwin (office mac)
-        os.system('(afplay %s) &' % fname)
-    elif "cygwin" in sys.platform.lower(): # cygwin (laptop)
-        os.system('(cat %s > /dev/dsp) &' % fname)
-    else:
-        os.system('(cat %s > /dev/dsp) &' % fname)
-    
+    cmd = ""
+    if config.device == "pi": cmd += '(aplay %s) &' % fname
+    elif config.device == "mac": cmd += '(afplay %s) &' % fname
+    elif config.device == "pc": cmd += '(cat %s > /dev/dsp) &' % fname
+    if cmd: os.system(cmd)
+
 def toTimestamp(dt):
     return int(time.mktime(dt.timetuple()))
 
@@ -97,19 +84,36 @@ def humanReadableTime(dt=None, sec=None, precision=1):
     return '{}'.format(human_delta) 
 
 def timeit(func):
-
   def wrapper(*arg):
       t = time.time()
       res = func(*arg)
       print "%s took %.2f ms" % (func.func_name, time.time()-t)
       return res
-
   return wrapper
 
-# now = datetime.datetime.now()
-# dt = datetime.timedelta(seconds=180)
-# then = now-dt
-# print then,now
-# # print humanReadableTime2(dt=now-then)
-# print human(dt=now-then)
-# print humanReadableTime(sec=-1)
+def get_voice_wit(data):
+    url = "https://api.wit.ai/speech?v=20141022"
+    headers = {"Authorization": "Bearer {0}".format(config.WIT_AI_KEY), "Content-Type": "audio/wav"}
+    resp = requests.post(url, data=data, headers=headers)
+    return resp.json()
+
+def get_voice_api(data):
+    url = "https://api.api.ai/v1/query?v=20150910"
+    jd = json.dumps({"sessionId" : "1234567890", "lang": "en", "timezone": config.timezone})
+    headers = { "Authorization": "Bearer {0}".format(config.API_AI_KEY), "ocp-apim-subscription-key": config.API_AI_SUB_KEY }
+    files = { 'request': ('', jd, 'application/json'), 'voiceData': ('', data, 'audio/wav') }
+    resp = requests.post(url, headers=headers, files=files)
+    return resp.json()
+
+def get_text_wit(query):
+    url = 'https://api.wit.ai/message'
+    params = {'access_token' : config.WIT_AI_KEY, 'q' : query }
+    resp = requests.get(url, params=params)
+    return resp.json()
+
+def get_text_api(query):
+    url = "https://api.api.ai/v1/query?v=20150910"
+    params = {"lang": "en", "timezone": config.timezone, "query": query}
+    headers = { "Authorization": "Bearer {0}".format(config.API_AI_KEY), "ocp-apim-subscription-key": config.API_AI_SUB_KEY }
+    resp = requests.get(url, headers=headers, params=params)
+    return resp.json()

@@ -7,7 +7,7 @@ import numpy as np
 # from Process import Processor
 
 class Trigger:
-    def __init__(self):
+    def __init__(self,training=False):
         self.RECORD_SECONDS = 10
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 1
@@ -22,19 +22,6 @@ class Trigger:
         self.MIN_WORD_TIME = 0.27 # recordings shorter than this (in seconds) are clicks or snaps
         self.MAX_WORD_TIME = 1.2 # recordings longer than this (in seconds) are probably background noise
         
-        # self.thread = threading.Thread(target=self.loop)
-        # self.thread.setDaemon(True)
-        # def startLoop(self):
-        #     self.doLoop = True
-        #     self.thread.start()
-        # def stopLoop(self):
-        #     self.doLoop = False # doesn't actually kill the thread
-        # def loop(self):
-        #     while self.doLoop:
-        #         self.checkTimes()
-        #         time.sleep(self.DELAY)
-        # events.startLoop()
-
         self.mic = False
 
         self.fname = None
@@ -59,11 +46,9 @@ class Trigger:
 
         self.makeWeights()
 
-        # self.proc = Processor()
-        # self.fname = self.proc.processTrainingSet(basedir="sounds/train/", signalword="oknavsa", savedir="data/")
-        # fname = proc.processTrainingSet(basedir="sounds/train/", signalword="navsa", savedir="data/")
-        # self.proc.loadTrainData("data/imagedata_30_30.npy")
-        # self.proc.trainAndTest()
+        self.training = training
+        if not self.training:
+            pass
 
     def makeWeights(self):
         self.windowsize = int(1.0*self.RATE/self.CHUNK*self.TWINDOW)
@@ -190,9 +175,6 @@ class Trigger:
         if len(extra) > 0: strBuff += " ... %s" % extra
         return strBuff
 
-    def setTrainign(self, training=True):
-        self.training = training
-
     def framesToNumpy(self, frames):
         frames = ''.join(frames)
         return np.fromstring(frames, self.DTYPE);
@@ -214,35 +196,8 @@ class Trigger:
         return self.framerate
 
 
-
 if __name__ == '__main__':
     t = Trigger()
-    # t.readWav("sounds/random2.wav")
     t.readWav("sounds/oknavsa4.wav", verbose=True)
-    # t.readMic()
-    # t.listenLoop()
-
     print len(t.getSubsamples())
 
-# # there is 1 mean time per chunk, so we should shift it by 1 chunk
-# # to center it with respect to the fulltimes array
-# means = np.array(means)
-# times = (np.arange(0,len(means),1.0) + 1.0) * CHUNK/RATE
-
-# waveform = ''.join(frames)
-# waveform = np.fromstring(waveform, 'Int16');
-# fulltimes = np.linspace(0.0, RECORD_SECONDS, num=len(waveform))
-
-
-# plt.plot(fulltimes, waveform)
-
-
-# plt.plot(times, means)
-# plt.axhline(y=threshold, color='r')
-
-# ranges = np.array([recs[i:i+2] for i in range(0,len(recs)-1,2)])
-# for left,right in ranges:
-#     plt.axvspan(left, right, alpha=0.25, color='grey')
-
-
-# plt.show()

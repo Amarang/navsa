@@ -3,6 +3,7 @@ import os, sys
 import urllib, urllib2, json, datetime, time
 import pprint
 import Utils as u
+import config
 import Events
 
 # Test with:
@@ -13,20 +14,11 @@ import Events
 #   response = urllib2.urlopen(req)
 #   the_page = response.read()
 
-API_KEY = "5WGVQPPDHU7JH2J5WDBJHMJLRXB5WDTP"
-sounddir = "../sounds/"
-
-def getWit(query):
-    data = {'access_token' : API_KEY, 'q' : query }
-    response = urllib2.urlopen('https://api.wit.ai/message?'+urllib.urlencode(data)).read()
-    out = json.loads(response)
-    return out
-
 def wit(words):
     intent = None
 
     try:
-        out = getWit(words)
+        out = u.get_text_wit(words)
         print out
         intent = out["outcomes"][0]["intent"]
     except:
@@ -52,16 +44,8 @@ def wit(words):
         events.addEvent(now, when, "ALARM")
 
     elif intent == "onoff":
-        # seconds = out["outcomes"][0]["entities"]["duration"][0]["normalized"]["value"] # seconds
-        # print out["outcomes"]
         onoff = str(out["outcomes"][0]["entities"]["on_off"][0]["value"])
         u.say("Turning lights %s" % onoff)
-        # print out["outcomes"][0]["entities"]["on_off"]["value"]
-
-        # now = datetime.datetime.now()
-        # when = now + datetime.timedelta(seconds=seconds)
-        # dt = when - now
-        # events.addEvent(now, when, "ALARM")
 
 def handleWords(words,reqType=None):
     if reqType == "meterMaker":
@@ -78,11 +62,11 @@ def handleWords(words,reqType=None):
           or "what is name" in words
           or "his name his" in words
           or "whats the name" in words  ):
-          u.play(sounddir+"johncena_nointro.wav")
+          u.play(config.sounddir+"johncena_nointro.wav")
           return
 
       if("john cena" in words):
-          u.play(sounddir+"johncena.wav")
+          u.play(config.sounddir+"johncena.wav")
           return
 
       if(words.strip().lower().startswith("say")): 
@@ -99,20 +83,13 @@ def handleWords(words,reqType=None):
 @post('/say')
 def getWords():
     d = dict(request.forms)
-    # print d
     words = d["words"]
     reqType = d["type"] if "type" in d else None
-    # print words, reqType
-    # print "test"
     handleWords(words,reqType)
-    # os.system(cmd)
 
 if __name__ == '__main__':
     events = Events.Events(delay=3,threshold=10,timefile="times.db")
     events.startLoop()
-
-
-    # handleWords("remind me to take the trash out in 1 minute", "voice")
 
     run(host="0.0.0.0", port=8080)
 
