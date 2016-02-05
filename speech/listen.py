@@ -156,10 +156,10 @@ class Recognizer(AudioSource):
         self.params = {}
         self.params["energy_threshold"] = 600 # minimum audio energy to consider for recording
         self.params["dynamic_energy_threshold"] = True
-        self.params["dynamic_energy_adjustment_damping"] = 0.15
+        self.params["dynamic_energy_adjustment_damping"] = 0.25
         self.params["dynamic_energy_ratio"] = 6.0
-        self.params["pause_threshold"] = 0.05 # seconds of non-speaking audio before a phrase is considered complete # NJA change this if we want faster response on keywords
-        self.params["phrase_threshold"] = 0.5 # minimum seconds of speaking audio before we consider the speaking audio a phrase - values below this are ignored (for filtering out clicks and pops)
+        self.params["pause_threshold"] = 0.15 # seconds of non-speaking audio before a phrase is considered complete # NJA change this if we want faster response on keywords
+        self.params["phrase_threshold"] = 0.4 # minimum seconds of speaking audio before we consider the speaking audio a phrase - values below this are ignored (for filtering out clicks and pops)
         self.params["non_speaking_duration"] = 0.03 # seconds of non-speaking audio to keep on both sides of the recording
 
         self.params["keyword_how_long_ago"] = 999.9
@@ -216,6 +216,7 @@ class Recognizer(AudioSource):
 
         seconds_per_buffer = (source.CHUNK + 0.0) / source.SAMPLE_RATE
         elapsed_time = 0
+        print "Adjusting"
         while True:
             elapsed_time += seconds_per_buffer
             if elapsed_time > duration: break
@@ -224,6 +225,7 @@ class Recognizer(AudioSource):
             damping = self.params["dynamic_energy_adjustment_damping"] ** seconds_per_buffer # account for different chunk sizes and rates
             target_energy = energy * self.params["dynamic_energy_ratio"]
             self.params["energy_threshold"] = self.params["energy_threshold"] * damping + target_energy * (1 - damping)
+        print "Done adjusting"
 
     def listen(self, source, timeout = None):
         """
@@ -262,11 +264,11 @@ class Recognizer(AudioSource):
 
                 # detect whether speaking has started on audio input
                 energy = audioop.rms(buffer, source.SAMPLE_WIDTH) # energy of the audio signal
-                print energy, self.params["energy_threshold"], self.params["keyword_how_long_ago"]
+                # print energy, self.params["energy_threshold"], self.params["keyword_how_long_ago"]
                 if energy > self.params["energy_threshold"]:
                     break
 
-                # dynamically adjust the energy threshold using assymmetric weighted average
+                # dynamically adjust the energy threshold using asymmetric weighted average
                 if self.params["dynamic_energy_threshold"]:
                     damping = self.params["dynamic_energy_adjustment_damping"] ** seconds_per_buffer # account for different chunk sizes and rates
                     target_energy = energy * self.params["dynamic_energy_ratio"]
@@ -290,7 +292,7 @@ class Recognizer(AudioSource):
                 else:
                     pause_count += 1
 
-                print phrase_count, pause_count, pause_buffer_count
+                print phrase_count, phrase_buffer_count, pause_count, pause_buffer_count
                 if pause_count > pause_buffer_count: # end of the phrase
                     break
 
@@ -317,7 +319,7 @@ class Recognizer(AudioSource):
         if self.said_keyword_recently():
             # we are in the regime where we can say a command, so change some params to allow for sustained speech NJA
             self.params["pause_threshold"] = 0.8 # seconds of non-speaking audio before a phrase is considered complete # NJA change this if we want faster response on keywords
-            self.params["phrase_threshold"] = 0.6 # minimum seconds of speaking audio before we consider the speaking audio a phrase - values below this are ignored (for filtering out clicks and pops)
+            self.params["phrase_threshold"] = 0.5 # minimum seconds of speaking audio before we consider the speaking audio a phrase - values below this are ignored (for filtering out clicks and pops)
             self.params["non_speaking_duration"] = 0.3 # seconds of non-speaking audio to keep on both sides of the recording
         else:
             # regime where we should listen for keyword
@@ -387,15 +389,15 @@ class Recognizer(AudioSource):
 if __name__=='__main__':
 
 
-    lastnum = 0
+    lastnum = 1
     try:
-        lastnum = sorted([int(v.split("_")[-1].split(".")[0]) for v in os.listdir("train") if "_" in v])[-1]
+        lastnum = sorted([int(v.split("_")[-1].split(".")[0]) for v in os.listdir("office") if "random_" in v])[-1]
     except: pass
 
     from Process import Processor
     proc = Processor()
-    # fname = proc.processTrainingSet(basedir="train/", signalword="oknavsa", savedir="data/")
-    proc.loadTrainData("data/imagedata_30_30.npy")
+    fname = proc.processTrainingSet(basedir="train/", signalword="oknavsa", savedir="data/")
+    # proc.loadTrainData("data/imagedata_30_30.npy")
 
     proc.trainAndTest()
 
@@ -413,7 +415,7 @@ if __name__=='__main__':
             print "here", len(audio.frame_data), audio.sample_rate, 1.0*len(audio.frame_data)/audio.sample_rate
 
 
-            # waveFile = wave.open("train/output_%i.wav" % ifile, 'wb')
+            # waveFile = wave.open("office/random_%i.wav" % ifile, 'wb')
             # waveFile.setnchannels(1)
             # waveFile.setsampwidth(audio.sample_width)
             # waveFile.setframerate(framerate)
@@ -440,6 +442,8 @@ if __name__=='__main__':
     r = Recognizer()
     m = Microphone()
 
+    with m as source:
+        r.adjust_for_ambient_noise(source) # we only need to calibrate once, before we start listening
 
     stop_listening = r.listen_in_background(m, callback) # `stop_listening` is now a function that, when called, stops background listening
 

@@ -4,10 +4,10 @@ from tqdm import tqdm
  
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
-RATE = 11025
+RATE = 16000
 CHUNK = 512
-RECORD_SECONDS = 15
-WAVE_OUTPUT_FILENAME = "sounds/test.wav"
+RECORD_SECONDS = 60
+WAVE_OUTPUT_FILENAME = "16khz/test.wav"
 
 audio = pyaudio.PyAudio()
  

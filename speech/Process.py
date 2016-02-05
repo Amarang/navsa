@@ -4,41 +4,38 @@ import matplotlib as mpl
 mpl.use('Agg')
 import numpy as np
 import matplotlib.pyplot as plt
-from Split import Splitter
 from Trigger import Trigger
 from Fingerprint import Fingerprinter
 import Utils as u
 import scipy.ndimage as ndimage
 from sklearn import linear_model, metrics
-from sklearn.cross_validation import train_test_split
-
-
+from sklearn import cross_validation
 
 class Processor:
-    def __init__(self, Ntime=30, Nfreq=30):
-        self.Ntime,self.Nfreq = 30,30
+    def __init__(self, Ntime=12, Nfreq=12, DO_NUDGE=True,DO_STRETCH=True, alg="logistic"):
+        self.Ntime,self.Nfreq = Ntime,Nfreq
         self.YXtot = []
         self.keywordDurations = []
-        self.DURATION_SIGMA = 3.0
+        self.DURATION_SIGMA = 2.5
+        self.DO_NUDGE = DO_NUDGE
+        self.DO_STRETCH = DO_STRETCH
+        self.alg = alg
+        self.verbosity = 2
         self.clf = None
 
-
-
-    def getFeatures(self, data, framerate, isSignal=0):
+    def getFeatures(self, data, framerate, isSignal=0, timestretchFactor=1.0):
         fp = Fingerprinter()
         fp.setData(data, framerate)
-        times,freqs,Pxx = fp.getSpectrogram()
+        times,freqs,Pxx = fp.getSpectrogram(timestretchFactor)
 
         ztime = float(self.Ntime) / Pxx.shape[1] if Pxx.shape[1] > self.Ntime else 1
         zfreq = float(self.Nfreq) / Pxx.shape[0] if Pxx.shape[0] > self.Nfreq else 1
 
-        # print zfreq,ztime
         Pxx = ndimage.interpolation.zoom(Pxx,zoom=(zfreq, ztime),order=0)
 
-
         nfreq,ntime = Pxx.shape
-        freqPad = self.Nfreq-nfreq # pad higher frequencies with 0
-        timePad = self.Ntime-ntime # pad higher times with 0
+        freqPad = max(self.Nfreq-nfreq,0) # pad higher frequencies with 0
+        timePad = max(self.Ntime-ntime,0) # pad higher times with 0
         Pxx = np.pad(Pxx, [(freqPad,0), (0,timePad)], mode='constant', constant_values=0.0)
 
         img = Pxx.flatten() # restore freq,time matrix with Pxx.reshape(self.Nfreq,self.Ntime)
@@ -54,8 +51,7 @@ class Processor:
 
         clips = os.listdir(basedir)
 
-        # sp = Splitter()
-        tr = Trigger(training=True)
+        tr = Trigger()
 
         self.YXtot = []
         self.keywordDurations = []
@@ -72,29 +68,33 @@ class Processor:
                 else:
                     continue
 
-
                 tr.readWav(basedir+clip)
                 subsamples = tr.getSubsamples()
                 framerate = tr.getFramerate()
 
-                print "Loading clip %s (isSignal: %i) ==> %i subsamples" % (clip, isSignal, len(subsamples))
-
+                if self.verbosity > 1: print "Loading clip %s (isSignal: %i) ==> %i subsamples" % (clip, isSignal, len(subsamples))
 
                 for ss in subsamples:
                     if isSignal:
                         self.keywordDurations.append( self.getSampleDuration(ss, framerate) )
-                    img = self.getFeatures(ss, framerate, isSignal)
-                    self.YXtot.append(img)
+
+                    self.YXtot.append( self.getFeatures(ss,framerate,isSignal) )
+                    if self.DO_STRETCH:
+                        self.YXtot.append( self.getFeatures(ss,framerate,isSignal,timestretchFactor=1.15) )
+                        self.YXtot.append( self.getFeatures(ss,framerate,isSignal,timestretchFactor=0.85) )
 
         self.YXtot = np.array(self.YXtot)
 
         self.keywordDurations = np.array(self.keywordDurations)
 
         outputname = "%simagedata_%i_%i.npy" % (savedir,self.Nfreq,self.Ntime)
+        outputname_meta = "%smetadata_%i_%i.npy" % (savedir,self.Nfreq,self.Ntime)
         np.save(outputname, self.YXtot)
-        print "made %s" % outputname
-        return outputname
+        np.save(outputname_meta, self.keywordDurations)
+        if self.verbosity > 1: print "made %s and %s" % (outputname, outputname_meta)
 
+        self.trainAndTest()
+        # return score
 
     def nudge(self, Xtot, Ytot, w=3):
         newXtot = []
@@ -114,9 +114,12 @@ class Processor:
         return 1.0*len(data)/framerate # seconds
 
     def loadTrainData(self, datafile):
+        metafile = datafile.replace("image","meta")
         self.Nfreq, self.Ntime = map(int,datafile.split(".")[0].split("_")[-2:])
         self.YXtot = np.load(datafile)
+        self.keywordDurations = np.load(metafile)
 
+        self.trainAndTest()
 
     def trainAndTest(self):
         self.clf = None
@@ -125,19 +128,36 @@ class Processor:
         Ytot = self.YXtot[:,0]
 
 
-        # Xtot, Ytot = self.nudge(Xtot,Ytot, w=3)
+        if self.verbosity > 1:
+            print "Number of signal samples: %i" % int(np.sum(Ytot > 0.5))
+            print "Number of background samples: %i" % int(np.sum(Ytot < 0.5))
 
-        X_train, X_test, Y_train, Y_test = train_test_split(Xtot, Ytot, test_size=0.15, random_state=42)
+        X_train, X_test, Y_train, Y_test = cross_validation.train_test_split(Xtot, Ytot, test_size=0.30, random_state=43)
 
-        logistic_classifier = linear_model.LogisticRegression(C=2.0)
-        logistic_classifier.fit(X_train, Y_train)
+        if self.DO_NUDGE:
+            X_train, Y_train = self.nudge(X_train,Y_train, w=3)
 
-        self.clf = logistic_classifier
+        if self.alg == "logistic":
+            self.clf = linear_model.LogisticRegression(C=5.0)
+        elif self.alg == "svm":
+            from sklearn import svm
+            self.clf = svm.SVC(probability=True)
+        elif self.alg == "perceptron":
+            self.clf = linear_model.Perceptron()
 
-        # print "Logistic regression using raw pixel features:\n%s\n" % (metrics.classification_report(Y_test,logistic_classifier.predict(X_test)))
+        self.clf.fit(X_train, Y_train)
 
-        # print "Score on training set: %.2f" % logistic_classifier.score(X_train, Y_train)
-        # print "Score on testing set: %.2f" % logistic_classifier.score(X_test, Y_test)
+        # from sklearn import cross_validation
+        # scores = cross_validation.cross_val_score(self.clf, X_test, Y_test, cv=15)
+        # print scores
+        # print "score:",scores.mean(), scores.std()
+
+        if self.verbosity > 1:
+            print "Results:\n%s\n" % (metrics.classification_report(Y_test,self.clf.predict(X_test)))
+            print "Score on training set: %.2f" % self.clf.score(X_train, Y_train)
+            print "Score on testing set: %.2f" % self.clf.score(X_test, Y_test)
+        
+        # return scores.mean(), scores.std()
 
     def predict(self, features):
         with warnings.catch_warnings():
@@ -150,3 +170,14 @@ class Processor:
             features = self.getFeatures(data, framerate)
             return self.clf.predict_proba(features[1:])[0][1]
 
+if __name__ == '__main__':
+    tr = Trigger()
+    proc = Processor()
+    tr.readWav("sounds/oknavsa4.wav")
+
+    subsamples = tr.getSubsamples()
+    framerate = tr.getFramerate()
+    for ss in subsamples[:1]:
+        img = proc.getFeatures(ss, framerate, 1)
+        # print img
+        # print img.shape

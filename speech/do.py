@@ -1,47 +1,52 @@
-from tqdm import tqdm
-import threading
-import matplotlib as mpl
-mpl.use('Agg')
 import numpy as np
-import matplotlib.pyplot as plt
+import sys, time
+import signal
 
 import Utils as u
-from Split import Splitter
-from Fingerprint import Fingerprinter
 from Process import Processor
 from Trigger import Trigger
+from Parse import Parser
 
-proc = Processor(Nfreq=40, Ntime=40)
+proc = Processor(DO_NUDGE=True,DO_STRETCH=True,Nfreq=12,Ntime=12, alg="logistic")
+parser = Parser()
 tr = Trigger()
 
-fname = proc.processTrainingSet(basedir="sounds/train/", signalword="oknavsa", savedir="data/")
-# fname = proc.processTrainingSet(basedir="sounds/train/", signalword="navsa", savedir="data/")
-# proc.loadTrainData("data/imagedata_30_30.npy")
-proc.trainAndTest()
+# proc.processTrainingSet(basedir="sounds/train/", signalword="oknavsa", savedir="data/")
+# proc.processTrainingSet(basedir="16khz/", signalword="oknavsa", savedir="data/")
+proc.loadTrainData("data/imagedata_12_12.npy")
 
 #if not in this range, we want to not fingerprint it to save time and trouble
 lower,upper = proc.getKeywordDurationRange()
-print lower,upper
-tr.MIN_WORD_TIME = lower
-tr.MAX_WORD_TIME = upper
+tr.setParams({"MIN_WORD_TIME": lower, "MAX_WORD_TIME": upper})
 
-for sample in ["oknavsa", "navsa", "random"]:
-    tr.readWav("sounds/test_%s.wav" % sample)
-    topred = tr.getMainSubsample()
-    if topred is None: continue
-    topred = proc.getFeatures(topred, tr.getFramerate())
-    confidence = round(proc.predict(topred),3)
-    print sample, confidence
+# tr.setParams({"THRESHOLD": 1000})
+tr.getAmbientLevels(duration=0.5)
 
-print "Done testing samples"
 print "Now will score realtime audio"
 
-def myCallback(data,framerate):
-    confidence = proc.getKeywordProbability(data, framerate)
-    if confidence > 0.8: u.play("../sounds/notification.wav")
-    print "duration: %.2f s, score: %.2f" % (1.0*len(data)/framerate, confidence)
-# thread = threading.Thread(target=tr.readMic, kwargs={"verbose":True, "duration":5, "callback":myCallback})
-thread = threading.Thread(target=tr.readMic, kwargs={"duration":19, "callback":myCallback})
-thread.start()
-print "Done"
-# thread.join()
+def myCallback(trigger, data, data_raw):
+    print
+    framerate = trigger.getFramerate()
+    if not trigger.hasSaidKeyword():
+        confidence = proc.getKeywordProbability(data, framerate)
+        if confidence > 0.60:
+            u.play("../sounds/notification.wav")
+            # u.toast("What's up?")
+            trigger.saidKeyword()
+        print "duration: %.2f s, score: %.2f" % (1.0*len(data)/framerate, confidence)
+    else:
+        print "duration: %.2f s" % (1.0*len(data)/framerate)
+
+        # out = u.get_voice_api(data_raw)
+        # parser.handle_api_ai(out)
+
+
+stopper = tr.readMic(verbose=True, callback=myCallback)
+
+tot_time = 100.0
+# tot_time = 1.0
+
+for i in range(int(tot_time*10)):
+    time.sleep(1.0/10.0)
+
+stopper()
