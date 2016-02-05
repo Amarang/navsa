@@ -1,59 +1,68 @@
 from matplotlib.mlab import find
 import pyaudio, wave, audioop
-import sys, time, threading
+import sys, time, threading, copy
 import matplotlib.pyplot as plt
 import numpy as np
- 
-# from Process import Processor
 
 class Trigger:
-    def __init__(self,training=False):
-        self.RECORD_SECONDS = 10
+    def __init__(self,DECAYRATE = 10.0, TWINDOW = 0.2, THRESHOLD = 600, FALLING_THRESHOLD_RATIO = 0.8, \
+                 PAUSE_THRESHOLD = 0.03, MIN_WORD_TIME = 0.27, MAX_WORD_TIME = 1.2, AMBIENT_MULT = 2.4, KEYWORD_DELAY = 2.5):
+
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 1
-        self.RATE = 11025
+        self.RATE = 11025 # FIXME need to use 16kHz for api.ai
+        # self.RATE = 16000 # FIXME need to use 16kHz for api.ai
         self.CHUNK = 512
         self.DTYPE='Int16'
 
-        self.DECAYRATE = 10.0 # when computing EMA, how fast to decay weights (lower means RMS persists longer)
-        self.TWINDOW = 0.2 # when computing EMA, what window size to use in seconds
-        self.THRESHOLD = 600 # RMS threshold to trigger recording
-        self.FALLING_THRESHOLD_RATIO = 0.9 # exit recording when RMS<THRESHOLD*FALLING_THRESHOLD_RATIO
-        self.MIN_WORD_TIME = 0.27 # recordings shorter than this (in seconds) are clicks or snaps
-        self.MAX_WORD_TIME = 1.2 # recordings longer than this (in seconds) are probably background noise
-        
-        self.mic = False
+        self.params = {}
+        self.params["DECAYRATE"] = DECAYRATE # when computing EMA, how fast to decay weights (lower means RMS persists longer)
+        self.params["TWINDOW"] = TWINDOW # when computing EMA, what window size to use in seconds
+        self.params["THRESHOLD"] = THRESHOLD # RMS threshold to trigger recording
+        self.params["FALLING_THRESHOLD_RATIO"] = FALLING_THRESHOLD_RATIO # putative silence when RMS<THRESHOLD*FALLING_THRESHOLD_RATIO
+        self.params["PAUSE_THRESHOLD"] = PAUSE_THRESHOLD # seconds of non-speaking audio before a phrase is considered complete
+        self.params["MIN_WORD_TIME"] = MIN_WORD_TIME # recordings shorter than this (in seconds) are clicks or snaps
+        self.params["MAX_WORD_TIME"] = MAX_WORD_TIME # recordings longer than this (in seconds) are probably background noise
+        self.params["AMBIENT_MULT"] = AMBIENT_MULT # when setting threshold automatically, thresh=AMBIENT_MULT*ambientmean
+        self.params["KEYWORD_DELAY"] = KEYWORD_DELAY # how long (in seconds) to consider things said after keyword as commands, after which we must say keyword again
 
-        self.fname = None
+        self.defaultparams = copy.deepcopy(self.params)
+
+        self.saidKeywordHowLongAgo = 30.0
+        self.saidKeywordRecently = False
+
+        
+        self.stream = None
+        self.mic = False
+        self.running = False
+
         self.framerate = None
         self.sampwidth = None
         self.nframes = None
         self.data = None
         self.verbose = False
-        self.training = False
 
         self.latestRMS = np.array([])
         self.means = []
-        self.frames = []
-        self.recs = []
-        self.recframes = []
         self.subsamples = []
         self.recording = False
-        self.trecording = 0.0
 
         self.windowsize = None
         self.weight = None
 
         self.makeWeights()
 
-        self.training = training
-        if not self.training:
-            pass
+
+    def setParams(self, p):
+        for key,val in p.items():
+            print "Setting %s to %.2f" % (key, float(val))
+            self.params[key] = val
+            self.defaultparams[key] = val
 
     def makeWeights(self):
-        self.windowsize = int(1.0*self.RATE/self.CHUNK*self.TWINDOW)
+        self.windowsize = int(1.0*self.RATE/self.CHUNK*self.params["TWINDOW"])
         self.weight = np.arange(0,self.windowsize,1.0)
-        self.weight = np.exp(self.DECAYRATE*self.weight/len(self.weight))
+        self.weight = np.exp(self.params["DECAYRATE"]*self.weight/len(self.weight))
         self.weight /= np.sum(self.weight)
 
     def reset(self):
@@ -66,12 +75,8 @@ class Trigger:
 
         self.latestRMS = np.array([])
         self.means = []
-        self.frames = []
-        self.recs = []
-        self.recframes = []
         self.subsamples = []
         self.recording = False
-        self.trecording = 0.0
 
         self.makeWeights()
 
@@ -79,7 +84,7 @@ class Trigger:
         self.reset()
 
         self.mic = False
-        self.fname = fname
+        self.running = True
         self.stream = wave.open(open(fname,"rb"))
         self.framerate = self.stream.getframerate()
         self.sampwidth = self.stream.getsampwidth()
@@ -88,63 +93,146 @@ class Trigger:
 
         self.listenLoop()
 
-    def readMic(self,verbose=False, duration=10, callback=None):
-        self.reset()
+    def openMic(self):
+        if(self.stream):
+            # mic already open
+            return
 
+        self.reset()
         self.mic = True
-        self.RECORD_SECONDS = duration
         self.audio = pyaudio.PyAudio()
         self.stream = self.audio.open(format=self.FORMAT,channels=self.CHANNELS,rate=self.RATE,input=True,frames_per_buffer=self.CHUNK)
         self.sampwidth = pyaudio.get_sample_size(self.FORMAT)
-        self.nframes = self.RECORD_SECONDS * self.RATE
         self.framerate = self.RATE
+        pass
+
+    def readMic(self,verbose=False, callback=None):
+
+        self.openMic()
+
+        self.running = True
+
         self.verbose = verbose
 
-        self.listenLoop(callback=callback)
+        listener_thread = threading.Thread(target=self.listenLoop, kwargs={"callback":callback})
+        listener_thread.daemon = True
+        listener_thread.start()
+        
+        def stopper():
+            self.running = False
+            listener_thread.join()
+
+        return stopper
+
+    def saidKeyword(self):
+        self.saidKeywordHowLongAgo = 0.0
+        self.saidKeywordRecently = True
+        pass
+
+    def hasSaidKeyword(self):
+        return self.saidKeywordRecently
+        pass
+
+    def updateParams(self):
+        if self.saidKeywordHowLongAgo < self.params["KEYWORD_DELAY"]:
+            # update params to be looser so that we can capture regular queries now
+            self.params["TWINDOW"] = 0.5
+            self.params["PAUSE_THRESHOLD"] = 0.4
+            self.params["FALLING_THRESHOLD_RATIO"] = 0.7
+            self.params["MIN_WORD_TIME"] = 0.5
+            self.params["MAX_WORD_TIME"] = 12.0
+        else:
+            self.saidKeywordRecently = False
+            # back to defaults (listening for WUW)
+            self.params = copy.deepcopy(self.defaultparams)
+
+
+    def getAmbientLevels(self, duration=0.5):
+        self.openMic()
+
+        levels = []
+        print "Please stfu for %.1f seconds" % duration
+        for i in range(int(self.framerate * duration / self.CHUNK)):
+            data = self.stream.read(self.CHUNK)
+            if len(data) == 0: break
+            r1 = self.getRMS(data)
+            levels.append(r1)
+
+        avg = np.mean(np.array(levels))
+        sigma = np.std(np.array(levels))
+        print "Ambient RMS is: %.1f" % (avg)
+        print "Ambient RMS rms is: %.1f" % (sigma)
+        self.params["THRESHOLD"] = avg*self.params["AMBIENT_MULT"]
+        self.defaultparams["THRESHOLD"] = avg*self.params["AMBIENT_MULT"]
+        print "Setting threshold to %.1f" % (self.params["THRESHOLD"])
 
     def listenLoop(self, callback=None):
-        nLoops = int(self.nframes / self.CHUNK)
-        for iloop in range(nLoops):
+
+        iloop = 0
+        dt = 1.0*self.CHUNK/self.RATE
+        timeBelowThresh = 0.0
+        trecording = 0.0
+        recframes = []
+        while self.running:
+            iloop += 1
 
             if self.mic: data = self.stream.read(self.CHUNK)
             else: data = self.stream.readframes(self.CHUNK)
+            
+            if len(data) == 0: break
 
-            t = 1.0*iloop*self.CHUNK/self.RATE
-            self.frames.append(data)
+
+            tm = dt*iloop
+            self.saidKeywordHowLongAgo += dt
+
+            # self.frames.append(data)
             r1 = self.getRMS(data)
 
             self.latestRMS = np.append(self.latestRMS, r1)[-self.windowsize:]
             meanRMS = np.dot( self.latestRMS , self.weight[-len(self.latestRMS):] )
             self.means.append(meanRMS)
 
-            line = self.drawBar( r1, 0,5000, 50, extra="%.2f %s" % (meanRMS, str(self.recording)) )
             if self.verbose:
-                sys.stdout.write("\r" + line)
+                # rightSide = 5000
+                rightSide = self.params["THRESHOLD"]*3
+                line = self.drawBar( meanRMS, 0,rightSide, 50, extra="%9.2f %6s [%7.2f] %5s"
+                        % (
+                          self.params["THRESHOLD"], 
+                          "[rec]" if self.recording else "", 
+                          self.saidKeywordHowLongAgo,
+                          "[trig]" if self.saidKeywordHowLongAgo < self.params["KEYWORD_DELAY"] else ""
+                          ) 
+                        )
+                sys.stdout.write("\r" + line + " ")
                 sys.stdout.flush()
 
             if self.recording:
-                self.trecording += 1.0*self.CHUNK/self.RATE
-                self.recframes.append(data)
+                trecording += dt
+                recframes.append(data)
+                
+                if meanRMS < self.params["THRESHOLD"] * self.params["FALLING_THRESHOLD_RATIO"]: timeBelowThresh += dt
 
-                if meanRMS < self.THRESHOLD * self.FALLING_THRESHOLD_RATIO or self.trecording > self.MAX_WORD_TIME:
+                if timeBelowThresh > self.params["PAUSE_THRESHOLD"] or trecording > self.params["MAX_WORD_TIME"]:
 
-                    if self.trecording > self.MIN_WORD_TIME:
-                        subsample = self.framesToNumpy(self.recframes[:])
+                    if trecording > self.params["MIN_WORD_TIME"]:
+                        subsample = self.framesToNumpy(recframes[:])
+                        subsample_raw = b''.join(recframes)
                         self.subsamples.append(subsample)
 
-                        if callback is not None:
-                            callback(subsample,framerate=self.framerate)
+                        if callback is not None: callback(self,subsample,subsample_raw)
 
-                    self.recs.append(t)
+                    # self.recs.append(tm)
                     self.recording = False
-                    self.recframes = []
-                    self.trecording = 0.0
+                    recframes = []
+                    trecording = 0.0
 
             else:
-                if meanRMS > self.THRESHOLD:
+                if meanRMS > self.params["THRESHOLD"]:
                     self.recording = True
-                    self.recs.append(t)
-                    self.recframes.append(data)
+                    timeBelowThresh = 0.0
+                    self.updateParams()
+                    # self.recs.append(tm)
+                    recframes.append(data)
 
         self.endLoop()
 
@@ -152,7 +240,8 @@ class Trigger:
     def endLoop(self):
         if self.recording:
             self.recording = False
-            self.recs.append(1.0 * self.nframes / self.RATE)
+            # if not self.mic: # close up recording interval if end of wav
+            #     self.recs.append(1.0 * self.nframes / self.RATE)
 
         if self.mic:
             self.stream.stop_stream()

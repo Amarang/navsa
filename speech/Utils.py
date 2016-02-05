@@ -1,7 +1,7 @@
 import datetime, time
 import os, sys
 import config
-import requests
+import requests, json
 from dateutil import parser
 
 def web(filename,user="namin"):
@@ -15,10 +15,9 @@ def say(text, voice=None):
 
     cmd = ""
     if say_type == "cereproc":
-        config.cereprocpath = "../bin/cereproc.sh"
         output="temp.wav"
         key="yveys9w8hipsc3di"
-        cmd = "(%s -v %s -o %s -k %s -t \"%s\" ; " % (cereprocpath, voice, output, key, text)
+        cmd = "(%s -v %s -o %s -k %s -t \"%s\" ; " % (config.cereprocpath, voice, output, key, text)
         if device == "pi": cmd += 'aplay temp.wav; ) &'
         elif device == "pc": cmd += 'cat temp.wav > /dev/dsp ; ) &'
         elif device == "mac": cmd += 'afplay temp.wav ; ) &'
@@ -41,9 +40,7 @@ def toast(text, title=""):
         # sounds in /System/Library/Sounds
         cmd += "osascript -e 'display notification \"%s\" with title \"%s\" sound name \"Submarine.aiff\"'" % (text, title)
     elif config.device == "pc":
-        config.logopath = "D:/Cygwin64/home/Nick/navsa/images/navsalogo.png"
-        config.toasterpath = "../bin/toast.exe"
-        cmd += "%s -t '%s' -m '%s' -p '%s'" % (toasterpath, title, text, logopath)
+        cmd += """%s -t "%s" -m "%s" -p '%s' """ % (config.toasterpath, title, text, config.logopath)
     if cmd: os.system(cmd)
 
 def play(fname):
@@ -106,7 +103,7 @@ def timeit(func):
   return wrapper
 
 def get_voice_wit(data):
-    url = "https://api.wit.ai/speech?v=20141022"
+    url = "https://api.wit.ai/speech?v=20151022"
     headers = {"Authorization": "Bearer {0}".format(config.WIT_AI_KEY), "Content-Type": "audio/wav"}
     resp = requests.post(url, data=data, headers=headers)
     return resp.json()
@@ -131,3 +128,6 @@ def get_text_api(query):
     headers = { "Authorization": "Bearer {0}".format(config.API_AI_KEY), "ocp-apim-subscription-key": config.API_AI_SUB_KEY }
     resp = requests.get(url, headers=headers, params=params)
     return resp.json()
+
+if __name__=='__main__':
+    toast("what's up")
