@@ -1,4 +1,4 @@
-import pprint
+import pprint, re
 
 import Utils as u
 import datetime, time
@@ -11,7 +11,8 @@ class Parser:
 
     def test_api_ai(self):
         queries = [
-                "set an alarm in 10 minutes and 32 seconds",
+                # "set an alarm in 10 minutes and 32 seconds",
+                "remind me to do something in 5 minutes",
                 # "turn off the lights",
                 # "where should I get dinner",
                 # "what's thirty-nine divided by the square root of 3",
@@ -94,8 +95,20 @@ class Parser:
             self.say_text( "%s" % (response) )
 
 
-        elif "fulfillment" in json["result"] and "speech" in json["result"]["fulfillment"]:
+        elif "fulfillment" in json["result"] and "speech" in json["result"]["fulfillment"] and len(json["result"]["fulfillment"]["speech"]) > 0:
             tosay = json["result"]["fulfillment"]["speech"]
+
+            print intent
+            self.say_text( "%s" % (tosay) )
+
+        elif "metadata" in json["result"] and "html" in json["result"]["metadata"] and len(json["result"]["metadata"]["html"]) > 0:
+            print "here"
+            pprint.pprint( json )
+            tag_re = re.compile(r'(<!--.*?-->|<[^>]*>)')
+            tosay = json["result"]["metadata"]["html"]
+            print tosay
+            tosay = tag_re.sub('', tosay)
+            print tosay
 
             print intent
             self.say_text( "%s" % (tosay) )

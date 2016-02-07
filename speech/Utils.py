@@ -9,6 +9,7 @@ def web(filename,user="namin"):
     print "Copied to uaf-8.t2.ucsd.edu/~%s/dump/%s" % (user, filename.split("/")[-1])
 
 def say(text, voice=None):
+    assert(len(text) > 0)
     device = config.device
     say_type = config.say_type[device]
     if not voice: voice = config.default_voice[say_type]
@@ -31,6 +32,7 @@ def say(text, voice=None):
         elif device == "pc": cmd = '(espeak -w temp.wav "%s" && cat temp.wav > /dev/dsp) & ' % text
     else:
         print "unrecognized configuration! voice: %s, device: %s, say_type: %s" % (voice, device, say_type)
+    print cmd
     if cmd: os.system(cmd)
 
 def toast(text, title=""):
@@ -43,11 +45,12 @@ def toast(text, title=""):
         cmd += """%s -t "%s" -m "%s" -p '%s' """ % (config.toasterpath, title, text, config.logopath)
     if cmd: os.system(cmd)
 
-def play(fname):
+def play(fname, blocking=False):
     cmd = ""
-    if config.device == "pi": cmd += '(aplay %s) &' % fname
-    elif config.device == "mac": cmd += '(afplay %s) &' % fname
-    elif config.device == "pc": cmd += '(cat %s > /dev/dsp) &' % fname
+    if config.device == "pi": cmd += '(aplay %s)' % fname
+    elif config.device == "mac": cmd += '(afplay %s)' % fname
+    elif config.device == "pc": cmd += '(cat %s > /dev/dsp)' % fname
+    if not blocking: cmd += ' &'
     if cmd: os.system(cmd)
 
 def toTimestamp(dt):
