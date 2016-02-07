@@ -124,14 +124,16 @@ class Trigger:
 
         return stopper
 
-    def saidKeyword(self):
+    def saidKeyword(self): # have said keyword, so now listen for query
         self.saidKeywordHowLongAgo = 0.0
         self.saidKeywordRecently = True
-        pass
 
     def hasSaidKeyword(self):
         return self.saidKeywordRecently
-        pass
+
+    def finishedQuery(self): # made query, so force this to listen for keyword again
+        self.saidKeywordHowLongAgo = 30.0
+        self.saidKeywordRecently = False
 
     def updateParams(self):
         if self.saidKeywordHowLongAgo < self.params["KEYWORD_DELAY"]:
