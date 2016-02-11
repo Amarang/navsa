@@ -1,17 +1,16 @@
 from matplotlib.mlab import find
-import pyaudio, wave, audioop
+import pyaudio, wave, audioop, io
 import sys, time, threading, copy
 import matplotlib.pyplot as plt
 import numpy as np
 
 class Trigger:
     def __init__(self,DECAYRATE = 10.0, TWINDOW = 0.2, THRESHOLD = 600, FALLING_THRESHOLD_RATIO = 0.8, \
-                 PAUSE_THRESHOLD = 0.03, MIN_WORD_TIME = 0.27, MAX_WORD_TIME = 1.2, AMBIENT_MULT = 2.4, KEYWORD_DELAY = 2.5):
+                 PAUSE_THRESHOLD = 0.03, MIN_WORD_TIME = 0.27, MAX_WORD_TIME = 1.2, AMBIENT_MULT = 2.1, KEYWORD_DELAY = 2.5):
 
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 1
-        self.RATE = 11025 # FIXME need to use 16kHz for api.ai
-        # self.RATE = 16000 # FIXME need to use 16kHz for api.ai
+        self.RATE = 11025
         self.CHUNK = 512
         self.DTYPE='Int16'
 
@@ -141,7 +140,7 @@ class Trigger:
             self.params["TWINDOW"] = 0.5
             self.params["PAUSE_THRESHOLD"] = 0.4
             self.params["FALLING_THRESHOLD_RATIO"] = 0.7
-            self.params["MIN_WORD_TIME"] = 0.5
+            self.params["MIN_WORD_TIME"] = 0.8
             self.params["MAX_WORD_TIME"] = 12.0
         else:
             self.saidKeywordRecently = False
@@ -218,7 +217,7 @@ class Trigger:
 
                     if trecording > self.params["MIN_WORD_TIME"]:
                         subsample = self.framesToNumpy(recframes[:])
-                        subsample_raw = b''.join(recframes)
+                        subsample_raw = self.betterRawData(b''.join(recframes))
                         self.subsamples.append(subsample)
 
                         if callback is not None: callback(self,subsample,subsample_raw)
@@ -265,6 +264,18 @@ class Trigger:
         strBuff += "] %5i [%7.1f]" % (upper, theval)
         if len(extra) > 0: strBuff += " ... %s" % extra
         return strBuff
+
+    def betterRawData(self,data_raw):
+        # apparently we have to do this to get voice to work with wit
+        with io.BytesIO() as wav_file:
+            wav_writer = wave.open(wav_file, "wb")
+            wav_writer.setframerate(self.RATE)
+            wav_writer.setsampwidth(self.sampwidth)
+            wav_writer.setnchannels(self.CHANNELS)
+            wav_writer.writeframes(data_raw)
+            wav_writer.close()
+            wav_data = wav_file.getvalue()
+        return wav_data
 
     def framesToNumpy(self, frames):
         frames = ''.join(frames)

@@ -12,11 +12,11 @@ from sklearn import linear_model, metrics
 from sklearn import cross_validation
 
 class Processor:
-    def __init__(self, Ntime=12, Nfreq=12, DO_NUDGE=True,DO_STRETCH=True, alg="logistic"):
+    def __init__(self, Ntime=15, Nfreq=15, DO_NUDGE=True,DO_STRETCH=True, alg="logistic"):
         self.Ntime,self.Nfreq = Ntime,Nfreq
         self.YXtot = []
         self.keywordDurations = []
-        self.DURATION_SIGMA = 2.5
+        self.DURATION_SIGMA = 3.0
         self.DO_NUDGE = DO_NUDGE
         self.DO_STRETCH = DO_STRETCH
         self.alg = alg
@@ -80,8 +80,8 @@ class Processor:
 
                     self.YXtot.append( self.getFeatures(ss,framerate,isSignal) )
                     if self.DO_STRETCH:
-                        self.YXtot.append( self.getFeatures(ss,framerate,isSignal,timestretchFactor=1.15) )
-                        self.YXtot.append( self.getFeatures(ss,framerate,isSignal,timestretchFactor=0.85) )
+                        self.YXtot.append( self.getFeatures(ss,framerate,isSignal,timestretchFactor=1.20) )
+                        self.YXtot.append( self.getFeatures(ss,framerate,isSignal,timestretchFactor=0.80) )
 
         self.YXtot = np.array(self.YXtot)
 

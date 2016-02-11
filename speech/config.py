@@ -17,6 +17,7 @@ elif "cygwin" in sys.platform.lower(): device = "pc"
 # VOICES
 say_type = {}
 say_type["pc"] = "fromMac"
+# say_type["pc"] = "cereproc"
 say_type["mac"] = "regular"
 say_type["pi"] = "fromMac"
 

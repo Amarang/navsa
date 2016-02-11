@@ -32,7 +32,6 @@ def say(text, voice=None):
         elif device == "pc": cmd = '(espeak -w temp.wav "%s" && cat temp.wav > /dev/dsp) & ' % text
     else:
         print "unrecognized configuration! voice: %s, device: %s, say_type: %s" % (voice, device, say_type)
-    print cmd
     if cmd: os.system(cmd)
 
 def toast(text, title=""):
@@ -106,7 +105,7 @@ def timeit(func):
   return wrapper
 
 def get_voice_wit(data):
-    url = "https://api.wit.ai/speech?v=20151022"
+    url = "https://api.wit.ai/speech?v=20141022"
     headers = {"Authorization": "Bearer {0}".format(config.WIT_AI_KEY), "Content-Type": "audio/wav"}
     resp = requests.post(url, data=data, headers=headers)
     return resp.json()
@@ -118,6 +117,16 @@ def get_voice_api(data):
     files = { 'request': ('', jd, 'application/json'), 'voiceData': ('', data, 'audio/wav') }
     resp = requests.post(url, headers=headers, files=files)
     return resp.json()
+
+def get_voice(data, site):
+    if site=="apiai": return get_voice_wit(data)
+    elif site=="witai": return get_voice_wit(data)
+    else: return None
+
+def get_text(query, site):
+    if site=="apiai": return get_text_api(query)
+    elif site=="witai": return get_text_wit(query)
+    else: return None
 
 def get_text_wit(query):
     url = 'https://api.wit.ai/message'
