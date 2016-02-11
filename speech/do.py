@@ -1,7 +1,6 @@
 import numpy as np
 import sys, time
 import signal
-import io, wave
 
 import Utils as u
 from Process import Processor
@@ -22,10 +21,9 @@ lower,upper = proc.getKeywordDurationRange()
 tr.setParams({"MIN_WORD_TIME": lower, "MAX_WORD_TIME": upper})
 
 # tr.setParams({"THRESHOLD": 1000})
-tr.getAmbientLevels(duration=0.5)
+tr.getAmbientLevels(duration=1.5)
 
 print "Now will score realtime audio"
-
 
 def myCallback(trigger, data, data_raw):
     print
