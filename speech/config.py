@@ -10,7 +10,11 @@ timezone = "America/Los_Angeles"
 
 # WHAT DEVICE
 device = "pc"
-if "linux" in sys.platform.lower(): device = "pi"
+if "linux" in sys.platform.lower():
+    if len(os.getenv("NICK")) > 0:
+        device = "mypi"
+    else:
+        device = "officepi"
 elif "darwin" in sys.platform.lower(): device = "mac"
 elif "cygwin" in sys.platform.lower(): device = "pc"
 
@@ -19,7 +23,8 @@ say_type = {}
 say_type["pc"] = "fromMac"
 # say_type["pc"] = "cereproc"
 say_type["mac"] = "regular"
-say_type["pi"] = "fromMac"
+say_type["officepi"] = "fromMac"
+say_type["mypi"] = "fromMac"
 
 default_voice = {}
 default_voice["fromMac"] = "Samantha" # Veena

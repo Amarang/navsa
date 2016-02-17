@@ -19,15 +19,18 @@ def say(text, voice=None):
         output="temp.wav"
         key="yveys9w8hipsc3di"
         cmd = "(%s -v %s -o %s -k %s -t \"%s\" ; " % (config.cereprocpath, voice, output, key, text)
-        if device == "pi": cmd += 'aplay temp.wav; ) &'
+        if device == "officepi": cmd += 'aplay temp.wav; ) &'
+        elif device == "mypi": cmd += 'aplay -D hw:1,0 temp.wav; ) &'
         elif device == "pc": cmd += 'cat temp.wav > /dev/dsp ; ) &'
         elif device == "mac": cmd += 'afplay temp.wav ; ) &'
     elif say_type == "fromMac":
         cmd = """(ssh -q namin@squark.physics.ucsb.edu "cd ~/sandbox/sound ; say -v %s \\'%s\\' -o temp.aiff ; /usr/local/bin/sox temp.aiff temp.wav " ; scp -q namin@squark.physics.ucsb.edu:~/sandbox/sound/temp.wav . ; """ % (voice, text)
-        if device == "pi": cmd += 'aplay temp.wav ; ) &'
+        if device == "officepi": cmd += 'aplay temp.wav ; ) &'
+        elif device == "mypi": cmd += 'aplay -D hw:1,0 temp.wav ; ) &'
         elif device == "pc": cmd += 'cat temp.wav > /dev/dsp ; ) &'
     elif say_type == "regular":
-        if device == "pi": cmd = '(espeak -w temp.wav "%s" && aplay temp.wav) & ' % text
+        if device == "officepi": cmd = '(espeak -w temp.wav "%s" && aplay temp.wav) & ' % text
+        elif device == "mypi": cmd = '(espeak -w temp.wav "%s" && aplay -D hw:1,0 temp.wav) & ' % text
         elif device == "mac": cmd = 'say -v %s "%s" &' % (voice, text)
         elif device == "pc": cmd = '(espeak -w temp.wav "%s" && cat temp.wav > /dev/dsp) & ' % text
     else:
@@ -46,7 +49,8 @@ def toast(text, title=""):
 
 def play(fname, blocking=False):
     cmd = ""
-    if config.device == "pi": cmd += '(aplay %s)' % fname
+    if config.device == "officepi": cmd += '(aplay %s)' % fname
+    if config.device == "mypi": cmd += '(aplay -D hw:1,0 %s)' % fname
     elif config.device == "mac": cmd += '(afplay %s)' % fname
     elif config.device == "pc": cmd += '(cat %s > /dev/dsp)' % fname
     if not blocking: cmd += ' &'
@@ -75,7 +79,9 @@ def humanReadableTime(dt=None, sec=None, precision=1):
         sec = max(sec, 0)
         dt = datetime.timedelta(seconds=sec)
 
-    if dt < datetime.timedelta(0): dt = datetime.timedelta(0)
+    if dt < datetime.timedelta(0): 
+        return "recently"
+
         
     d = { 
         'year'   : dt.days / 365 ,
@@ -94,7 +100,7 @@ def humanReadableTime(dt=None, sec=None, precision=1):
         hlist.append( '%s %s%s' % ( d[unit], unit, s ) )
         count += 1
     human_delta = ', '.join( hlist )
-    return '{}'.format(human_delta) 
+    return '{} ago'.format(human_delta) 
 
 def timeit(func):
   def wrapper(*arg):

@@ -54,9 +54,9 @@ class Events:
 
         words = ""
         if action == "ALARM":
-            words = "Nick, %s ago you asked me to alarm you. Beep. Beep. Beep." % (u.humanReadableTime(dt=dt))
+            words = "Nick, %s you asked me to alarm you. Beep. Beep. Beep." % (u.humanReadableTime(dt=dt))
         else:
-            words = "Nick, %s ago you asked me to remind you to %s" % (u.humanReadableTime(dt=dt), action)
+            words = "Nick, %s you asked me to remind you to %s" % (u.humanReadableTime(dt=dt), action)
         print "[times] %s" % words
         u.say(words)
         u.toast(words, action)

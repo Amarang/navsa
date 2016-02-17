@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 class Trigger:
-    def __init__(self,DECAYRATE = 10.0, TWINDOW = 0.2, THRESHOLD = 600, FALLING_THRESHOLD_RATIO = 0.8, \
+    def __init__(self,DECAYRATE = 4.0, TWINDOW = 0.2, THRESHOLD = 600, FALLING_THRESHOLD_RATIO = 0.8, \
                  PAUSE_THRESHOLD = 0.03, MIN_WORD_TIME = 0.27, MAX_WORD_TIME = 1.2, AMBIENT_MULT = 2.1, KEYWORD_DELAY = 2.5):
 
         self.FORMAT = pyaudio.paInt16
@@ -92,8 +92,8 @@ class Trigger:
 
         self.listenLoop()
 
-    def openMic(self):
-        if(self.stream):
+    def openMic(self, force=False):
+        if(self.stream and not force):
             # mic already open
             return
 
@@ -154,7 +154,9 @@ class Trigger:
         levels = []
         print "Please stfu for %.1f seconds" % duration
         for i in range(int(self.framerate * duration / self.CHUNK)):
-            data = self.stream.read(self.CHUNK)
+            try: data = self.stream.read(self.CHUNK)
+            except IOError as ex:
+                data = '\x00' * self.CHUNK
             if len(data) == 0: break
             r1 = self.getRMS(data)
             levels.append(r1)
@@ -177,7 +179,12 @@ class Trigger:
         while self.running:
             iloop += 1
 
-            if self.mic: data = self.stream.read(self.CHUNK)
+
+            if self.mic:
+                try: data = self.stream.read(self.CHUNK)
+                except IOError as ex:
+                    data = '\x00' * self.CHUNK
+                    self.openMic(force=True) # reset the freaking mic because pyaudio sucks balls on raspberry pi
             else: data = self.stream.readframes(self.CHUNK)
             
             if len(data) == 0: break

@@ -14,7 +14,7 @@ tr = Trigger()
 
 proc.processTrainingSet(basedir="sounds/train/", signalword="oknavsa", savedir="data/")
 # proc.processTrainingSet(basedir="16khz/", signalword="oknavsa", savedir="data/")
-# proc.loadTrainData("data/imagedata_20_20.npy")
+# proc.loadTrainData("data/imagedata_15_15.npy")
 
 #if not in this range, we want to not fingerprint it to save time and trouble
 lower,upper = proc.getKeywordDurationRange()
@@ -33,8 +33,8 @@ def myCallback(trigger, data, data_raw):
         confidence = proc.getKeywordProbability(data, framerate)
         print "took %.2fms to classify" % (1000.0*(time.time()-t0))
 
-        if confidence > 0.45:
-        # if confidence > 0.01:
+        # if confidence > 0.45:
+        if confidence > 0.01:
             print "duration: %.2f s, score: %.2f" % (1.0*len(data)/framerate, confidence)
             u.play("../sounds/notification.wav", blocking=True)
             # u.toast("What's up?")
