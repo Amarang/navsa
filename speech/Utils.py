@@ -119,7 +119,7 @@ def get_voice_api(data):
     return resp.json()
 
 def get_voice(data, site):
-    if site=="apiai": return get_voice_wit(data)
+    if site=="apiai": return get_voice_api(data)
     elif site=="witai": return get_voice_wit(data)
     else: return None
 

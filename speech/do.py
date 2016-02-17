@@ -38,7 +38,7 @@ def myCallback(trigger, data, data_raw):
             print "duration: %.2f s, score: %.2f" % (1.0*len(data)/framerate, confidence)
             u.play("../sounds/notification.wav", blocking=True)
             # u.toast("What's up?")
-            trigger.saidKeyword()
+            # trigger.saidKeyword()
     else:
         print "duration: %.2f s" % (1.0*len(data)/framerate)
 
