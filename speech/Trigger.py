@@ -6,7 +6,8 @@ import numpy as np
 
 class Trigger:
     def __init__(self,DECAYRATE = 4.0, TWINDOW = 0.2, THRESHOLD = 600, FALLING_THRESHOLD_RATIO = 0.8, \
-                 PAUSE_THRESHOLD = 0.03, MIN_WORD_TIME = 0.27, MAX_WORD_TIME = 1.2, AMBIENT_MULT = 2.1, KEYWORD_DELAY = 2.5):
+                 PAUSE_THRESHOLD = 0.03, MIN_WORD_TIME = 0.27, MAX_WORD_TIME = 1.2, AMBIENT_MULT = 2.1, KEYWORD_DELAY = 2.5,
+                 verbose = False):
 
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 1
@@ -39,7 +40,7 @@ class Trigger:
         self.sampwidth = None
         self.nframes = None
         self.data = None
-        self.verbose = False
+        self.verbose = verbose
 
         self.latestRMS = np.array([])
         self.means = []
@@ -54,7 +55,7 @@ class Trigger:
 
     def setParams(self, p):
         for key,val in p.items():
-            print "Setting %s to %.2f" % (key, float(val))
+            if self.verbose: print "Setting %s to %.2f" % (key, float(val))
             self.params[key] = val
             self.defaultparams[key] = val
 
@@ -79,7 +80,7 @@ class Trigger:
 
         self.makeWeights()
 
-    def readWav(self, fname,verbose=False):
+    def readWav(self, fname):
         self.reset()
 
         self.mic = False
@@ -88,7 +89,6 @@ class Trigger:
         self.framerate = self.stream.getframerate()
         self.sampwidth = self.stream.getsampwidth()
         self.nframes = self.stream.getnframes()
-        self.verbose = verbose
 
         self.listenLoop()
 
@@ -105,13 +105,11 @@ class Trigger:
         self.framerate = self.RATE
         pass
 
-    def readMic(self,verbose=False, callback=None):
+    def readMic(self, callback=None):
 
         self.openMic()
 
         self.running = True
-
-        self.verbose = verbose
 
         listener_thread = threading.Thread(target=self.listenLoop, kwargs={"callback":callback})
         listener_thread.daemon = True
