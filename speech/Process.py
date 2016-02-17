@@ -49,7 +49,14 @@ class Processor:
 
     def processTrainingSet(self, basedir="sounds/train/", signalword="oknavsa", savedir="data/"):
 
-        clips = os.listdir(basedir)
+        clips = [clip for clip in os.listdir(basedir) if clip.endswith(".wav")]
+
+        try:
+            with open("sounds/train/thresh.dat","r") as fh:
+                lines = [line.strip() for line in fh.readlines() if len(line)>1]
+                bestThresh = {line.split(",")[0]:int(line.split(",")[1]) for line in lines}
+        except:
+            bestThresh = {}
 
         tr = Trigger()
 
@@ -60,6 +67,9 @@ class Processor:
             warnings.filterwarnings("ignore",category=Warning)
 
             for clip in clips:
+
+                if clip in bestThresh: tr.setParams({"THRESHOLD": bestThresh[clip]})
+                else: tr.setParams({"THRESHOLD": 600})
 
                 if clip.lower().startswith(signalword):
                     isSignal = True

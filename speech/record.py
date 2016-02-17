@@ -6,13 +6,21 @@ FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 11025
 CHUNK = 512
-RECORD_SECONDS = 30
+RECORD_SECONDS = 60
 WAVE_OUTPUT_FILENAME = "test.wav"
 
 audio = pyaudio.PyAudio()
+
+
  
 # start Recording
-stream = audio.open(format=FORMAT,channels=CHANNELS,rate=RATE,input=True,frames_per_buffer=CHUNK)
+crappy = True
+if crappy:
+    for i in range(audio.get_device_count()):
+        if "USB PnP" in audio.get_device_info_by_index(i)["name"]: idx = i
+    stream = audio.open(format=FORMAT,channels=CHANNELS,rate=RATE,input=True,frames_per_buffer=CHUNK,input_device_index=idx)
+else:
+    stream = audio.open(format=FORMAT,channels=CHANNELS,rate=RATE,input=True,frames_per_buffer=CHUNK)
 
 print "recording..."
 frames = []

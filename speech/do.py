@@ -11,7 +11,7 @@ from Lights import Lights
 site = "apiai"
 proc = Processor()
 parser = Parser(site=site)
-tr = Trigger()
+tr = Trigger(verbose=True)
 led = Lights()
 
 # proc.processTrainingSet(basedir="sounds/train/", signalword="oknavsa", savedir="data/")
@@ -52,7 +52,7 @@ def myCallback(trigger, data, data_raw):
         # led.flip(onoff="off")
 
 
-stopper = tr.readMic(verbose=True, callback=myCallback)
+stopper = tr.readMic(callback=myCallback)
 
 tot_time = 100.0
 # tot_time = 1.0
