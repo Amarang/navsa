@@ -6,7 +6,7 @@ import numpy as np
 
 class Trigger:
     def __init__(self,DECAYRATE = 4.0, TWINDOW = 0.2, THRESHOLD = 600, FALLING_THRESHOLD_RATIO = 0.8, \
-                 PAUSE_THRESHOLD = 0.03, MIN_WORD_TIME = 0.27, MAX_WORD_TIME = 1.2, AMBIENT_MULT = 2.1, KEYWORD_DELAY = 2.5):
+                 PAUSE_THRESHOLD = 0.03, MIN_WORD_TIME = 0.27, MAX_WORD_TIME = 1.2, AMBIENT_MULT = 2.3, KEYWORD_DELAY = 2.5):
 
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 1
@@ -42,7 +42,7 @@ class Trigger:
         self.verbose = False
 
         self.latestRMS = np.array([])
-        self.means = []
+        self.means = np.array([])
         self.subsamples = []
         self.recording = False
 
@@ -73,7 +73,7 @@ class Trigger:
         self.data = None
 
         self.latestRMS = np.array([])
-        self.means = []
+        self.means = np.array([])
         self.subsamples = []
         self.recording = False
 
@@ -198,7 +198,8 @@ class Trigger:
 
             self.latestRMS = np.append(self.latestRMS, r1)[-self.windowsize:]
             meanRMS = np.dot( self.latestRMS , self.weight[-len(self.latestRMS):] )
-            self.means.append(meanRMS)
+            # self.means = np.append(self.means, r1)[-10*self.windowsize:]
+            # self.params["THRESHOLD"] = self.params["AMBIENT_MULT"]*np.mean(self.means)
 
             if self.verbose:
                 # rightSide = 5000

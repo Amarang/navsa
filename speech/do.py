@@ -6,15 +6,17 @@ import Utils as u
 from Process import Processor
 from Trigger import Trigger
 from Parse import Parser
+from Lights import Lights
 
 site = "apiai"
 proc = Processor()
 parser = Parser(site=site)
 tr = Trigger()
+led = Lights()
 
-proc.processTrainingSet(basedir="sounds/train/", signalword="oknavsa", savedir="data/")
+# proc.processTrainingSet(basedir="sounds/train/", signalword="oknavsa", savedir="data/")
 # proc.processTrainingSet(basedir="16khz/", signalword="oknavsa", savedir="data/")
-# proc.loadTrainData("data/imagedata_15_15.npy")
+proc.loadTrainData("data/imagedata_15_15.npy")
 
 #if not in this range, we want to not fingerprint it to save time and trouble
 lower,upper = proc.getKeywordDurationRange()
@@ -36,9 +38,10 @@ def myCallback(trigger, data, data_raw):
         # if confidence > 0.45:
         if confidence > 0.01:
             print "duration: %.2f s, score: %.2f" % (1.0*len(data)/framerate, confidence)
-            u.play("../sounds/notification.wav", blocking=True)
+            led.flash(duration=0.3)
+            u.play("../sounds/notification.wav", blocking=False)
             # u.toast("What's up?")
-            # trigger.saidKeyword()
+            trigger.saidKeyword()
     else:
         print "duration: %.2f s" % (1.0*len(data)/framerate)
 
@@ -46,6 +49,7 @@ def myCallback(trigger, data, data_raw):
         print out
         parser.handle(out)
         trigger.finishedQuery()
+        # led.flip(onoff="off")
 
 
 stopper = tr.readMic(verbose=True, callback=myCallback)

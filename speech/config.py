@@ -1,4 +1,4 @@
-import sys
+import sys, os
 
 # API KEYS
 WIT_AI_KEY = "5WGVQPPDHU7JH2J5WDBJHMJLRXB5WDTP" # wit.ai
@@ -8,10 +8,13 @@ API_AI_SUB_KEY = "ac30feb1-4806-4ce5-9797-2785f19cb4f6" # api.ai subscription ke
 # LOCATION INFO
 timezone = "America/Los_Angeles"
 
+# MEH
+nick = True
+
 # WHAT DEVICE
 device = "pc"
 if "linux" in sys.platform.lower():
-    if len(os.getenv("NICK")) > 0:
+    if nick:
         device = "mypi"
     else:
         device = "officepi"
