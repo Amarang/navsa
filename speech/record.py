@@ -14,7 +14,7 @@ audio = pyaudio.PyAudio()
 
  
 # start Recording
-crappy = True
+crappy = False
 if crappy:
     for i in range(audio.get_device_count()):
         if "USB PnP" in audio.get_device_info_by_index(i)["name"]: idx = i
