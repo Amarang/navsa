@@ -175,10 +175,8 @@ class Processor:
             return self.clf.predict_proba(features[1:])[0][1]
 
     def getKeywordProbability(self, data, framerate):
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore",category=Warning)
-            features = self.getFeatures(data, framerate)
-            return self.clf.predict_proba(features[1:])[0][1]
+        features = self.getFeatures(data, framerate)
+        return self.predict(features)
 
 if __name__ == '__main__':
     tr = Trigger()

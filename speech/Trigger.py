@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 class Trigger:
-    def __init__(self,DECAYRATE = 4.0, TWINDOW = 0.2, THRESHOLD = 600, FALLING_THRESHOLD_RATIO = 0.8, \
-                 PAUSE_THRESHOLD = 0.03, MIN_WORD_TIME = 0.27, MAX_WORD_TIME = 1.2, AMBIENT_MULT = 2.1, KEYWORD_DELAY = 2.5,
-                 verbose = False):
+    def __init__(self,DECAYRATE = 1.5, TWINDOW = 0.2, THRESHOLD = 600, FALLING_THRESHOLD_RATIO = 0.8, \
+                 PAUSE_THRESHOLD = 0.03, MIN_WORD_TIME = 0.27, MAX_WORD_TIME = 1.2, AMBIENT_MULT = 2.5, KEYWORD_DELAY = 2.5,
+                 verbose = False, led=None):
 
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 1
@@ -41,6 +41,7 @@ class Trigger:
         self.nframes = None
         self.data = None
         self.verbose = verbose
+        self.led = led
 
         self.latestRMS = np.array([])
         self.means = np.array([])
@@ -140,10 +141,11 @@ class Trigger:
             self.params["FALLING_THRESHOLD_RATIO"] = 0.7
             self.params["MIN_WORD_TIME"] = 0.8
             self.params["MAX_WORD_TIME"] = 12.0
-        else:
+        elif self.saidKeywordRecently:
             self.saidKeywordRecently = False
+            if self.led is not None: self.led.stop()
             # back to defaults (listening for WUW)
-            self.params = copy.deepcopy(self.defaultparams)
+            self.params = self.defaultparams.copy()
 
 
     def getAmbientLevels(self, duration=0.5):
@@ -212,6 +214,9 @@ class Trigger:
                         )
                 sys.stdout.write("\r" + line + " ")
                 sys.stdout.flush()
+
+            if self.saidKeywordRecently and self.saidKeywordHowLongAgo > self.params["KEYWORD_DELAY"]:
+                self.updateParams()
 
             if self.recording:
                 trecording += dt

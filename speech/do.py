@@ -8,11 +8,13 @@ from Trigger import Trigger
 from Parse import Parser
 from Lights import Lights
 
-site = "apiai"
+# site = "apiai"
+site = "witai"
 proc = Processor()
 parser = Parser(site=site)
-tr = Trigger(verbose=True)
 led = Lights()
+tr = Trigger(verbose=True, led=led)
+led.stop()
 
 # proc.processTrainingSet(basedir="sounds/train/", signalword="oknavsa", savedir="data/")
 # proc.processTrainingSet(basedir="16khz/", signalword="oknavsa", savedir="data/")
@@ -22,8 +24,9 @@ proc.loadTrainData("data/imagedata_15_15.npy")
 lower,upper = proc.getKeywordDurationRange()
 tr.setParams({"MIN_WORD_TIME": lower, "MAX_WORD_TIME": upper})
 
-# tr.setParams({"THRESHOLD": 1000})
-tr.getAmbientLevels(duration=1.5)
+tr.setParams({"THRESHOLD": 50})
+# tr.getAmbientLevels(duration=1.5)
+
 
 print "Now will score realtime audio"
 
@@ -35,10 +38,10 @@ def myCallback(trigger, data, data_raw):
         confidence = proc.getKeywordProbability(data, framerate)
         print "took %.2fms to classify" % (1000.0*(time.time()-t0))
 
-        # if confidence > 0.45:
-        if confidence > 0.01:
+        if confidence > 0.75:
+        # if confidence > 0.01:
             print "duration: %.2f s, score: %.2f" % (1.0*len(data)/framerate, confidence)
-            led.flash(duration=0.3)
+            led.start("flip", color="b")
             u.play("../sounds/notification.wav", blocking=False)
             # u.toast("What's up?")
             trigger.saidKeyword()
@@ -49,6 +52,7 @@ def myCallback(trigger, data, data_raw):
         print out
         parser.handle(out)
         trigger.finishedQuery()
+        led.stop()
         # led.flip(onoff="off")
 
 
