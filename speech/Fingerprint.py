@@ -4,6 +4,7 @@ import matplotlib as mpl
 mpl.use('Agg')
 import numpy as np
 import matplotlib.pyplot as plt
+import Utils as u
 
 import scipy
 import scipy.signal
@@ -80,3 +81,38 @@ class Fingerprinter:
     def getFingerprintPoints(self):
         xpts, ypts = self.getFingerprint()
         return np.c_[xpts, ypts]
+
+if __name__=='__main__':
+    import Split
+    from scikits.talkbox.features import mfcc
+    sp = Split.Splitter()
+    fp = Fingerprinter()
+
+    fig, axs = plt.subplots(nrows=2, ncols=1) 
+    fig.set_size_inches(12.0,10.0)
+
+    sp.doSplit("sounds/train/oknavsa1.wav")
+    ss = sp.getSubsamples()[0]
+
+    fp.setData(ss, sp.getFramerate())
+
+
+    times,freqs, Pxx = fp.getSpectrogram()
+    axs[0].pcolormesh(times,freqs,Pxx)
+
+    # ceps = mfcc(ss, fs=sp.getFramerate(), nceps=10)[0]
+    # times = np.arange(ceps.shape[0])
+    # freqs = np.arange(ceps.shape[1])
+    # axs[2].pcolormesh(times,freqs,ceps.T)
+
+    axs[1].plot(np.arange(0.0,len(ss))/sp.getFramerate(), ss, 'b')
+
+    # sp.doSplit("words.wav")
+    # axs[1,0].plot(sp.getWaveform(), 'b')
+    # axs[1,0].plot(sp.getSmoothWaveform(), 'r')
+    # for left,right in sp.getRanges():
+    #     axs[1,0].axvspan(left, right, alpha=0.25, color='grey')
+
+    fig.savefig("fp.png", bbox_inches='tight')
+    u.web("fp.png")
+
