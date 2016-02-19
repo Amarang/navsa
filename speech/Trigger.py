@@ -137,6 +137,7 @@ class Trigger:
         if self.saidKeywordHowLongAgo < self.params["KEYWORD_DELAY"]:
             # update params to be looser so that we can capture regular queries now
             self.params["TWINDOW"] = 0.5
+            self.params["DECAYRATE"] = 1.0
             self.params["PAUSE_THRESHOLD"] = 0.4
             self.params["FALLING_THRESHOLD_RATIO"] = 0.7
             self.params["MIN_WORD_TIME"] = 0.8
@@ -167,6 +168,8 @@ class Trigger:
         print "Ambient RMS rms is: %.1f" % (sigma)
         self.params["THRESHOLD"] = avg*self.params["AMBIENT_MULT"]
         self.defaultparams["THRESHOLD"] = avg*self.params["AMBIENT_MULT"]
+        # self.params["THRESHOLD"] = avg+sigma*self.params["AMBIENT_MULT"]
+        # self.defaultparams["THRESHOLD"] = avg+sigma*self.params["AMBIENT_MULT"]
         print "Setting threshold to %.1f" % (self.params["THRESHOLD"])
 
     def listenLoop(self, callback=None):

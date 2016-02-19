@@ -34,12 +34,11 @@ class Fingerprinter:
         self.framerate = framerate
         self.Pxx, self.tpeaks, self.fpeaks = None, None, None
 
-    def makeSpectrogram(self,timestretchFactor=1.0):
+    def makeSpectrogram(self):
         # self.Pxx, self.freqs, self.times, _ = plt.specgram(self.data, Fs = self.framerate, NFFT=self.NWINDOWS, noverlap=self.NWINDOWS//2)
         self.freqs, self.times, self.Pxx = scipy.signal.spectrogram(self.data, fs = self.framerate, nperseg=self.WINDOWSIZE)
         self.Pxx = np.log(self.Pxx)
 
-        self.times = self.times*timestretchFactor
         
         if self.DOFASTSMOOTH:
             self.Pxx = self.Pxx[::2] # every other frequency
@@ -52,9 +51,9 @@ class Fingerprinter:
         self.Pxx -= self.Pxx.min() # raise lowest to 0
         self.Pxx /= self.Pxx.max() # scale highest to 1
 
-    def getSpectrogram(self, timestretchFactor=1.0):
+    def getSpectrogram(self):
         if self.Pxx is None:
-            self.makeSpectrogram(timestretchFactor)
+            self.makeSpectrogram()
 
         return self.times, self.freqs, self.Pxx
 

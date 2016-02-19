@@ -6,26 +6,30 @@ import Utils as u
 from Process import Processor
 from Trigger import Trigger
 from Parse import Parser
-from Lights import Lights
+# from Lights import Lights
 
 # site = "apiai"
 site = "witai"
+haveLeds = False
 proc = Processor()
 parser = Parser(site=site)
-led = Lights()
-tr = Trigger(verbose=True, led=led)
-led.stop()
+if haveLeds:
+    led = Lights()
+    led.stop()
+    tr = Trigger(verbose=True, led=led)
+else:
+    tr = Trigger(verbose=True)
 
-# proc.processTrainingSet(basedir="sounds/train/", signalword="oknavsa", savedir="data/")
+proc.processTrainingSet(basedir="sounds/train/", signalword="oknavsa", savedir="data/")
 # proc.processTrainingSet(basedir="16khz/", signalword="oknavsa", savedir="data/")
-proc.loadTrainData("data/imagedata_15_15.npy")
+# proc.loadTrainData("data/imagedata_15_15.npy")
 
 #if not in this range, we want to not fingerprint it to save time and trouble
 lower,upper = proc.getKeywordDurationRange()
 tr.setParams({"MIN_WORD_TIME": lower, "MAX_WORD_TIME": upper})
 
-tr.setParams({"THRESHOLD": 50})
-# tr.getAmbientLevels(duration=1.5)
+# tr.setParams({"THRESHOLD": 50})
+tr.getAmbientLevels(duration=1.5)
 
 
 print "Now will score realtime audio"
@@ -41,7 +45,7 @@ def myCallback(trigger, data, data_raw):
         if confidence > 0.75:
         # if confidence > 0.01:
             print "duration: %.2f s, score: %.2f" % (1.0*len(data)/framerate, confidence)
-            led.start("flip", color="b")
+            if haveLeds: led.start("flip", color="b")
             u.play("../sounds/notification.wav", blocking=False)
             # u.toast("What's up?")
             trigger.saidKeyword()
@@ -52,7 +56,7 @@ def myCallback(trigger, data, data_raw):
         print out
         parser.handle(out)
         trigger.finishedQuery()
-        led.stop()
+        if haveLeds: led.stop()
         # led.flip(onoff="off")
 
 

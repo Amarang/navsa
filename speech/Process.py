@@ -10,23 +10,26 @@ import Utils as u
 import scipy.ndimage as ndimage
 from sklearn import linear_model, metrics
 from sklearn import cross_validation
+from sklearn import ensemble
+from sklearn import svm
+from sklearn import naive_bayes
 
 class Processor:
-    def __init__(self, Ntime=15, Nfreq=15, DO_NUDGE=True,DO_STRETCH=True, alg="logistic"):
+    def __init__(self, Ntime=15, Nfreq=15, TRAIN_FRAC=0.90, NUDGE_FRAC=0.0,alg="logistic",verbosity=2):
         self.Ntime,self.Nfreq = Ntime,Nfreq
         self.YXtot = []
         self.keywordDurations = []
-        self.DURATION_SIGMA = 3.0
-        self.DO_NUDGE = DO_NUDGE
-        self.DO_STRETCH = DO_STRETCH
+        self.DURATION_SIGMA = 1.7
+        self.TRAIN_FRAC = TRAIN_FRAC
+        self.NUDGE_FRAC = NUDGE_FRAC
         self.alg = alg
-        self.verbosity = 2
+        self.verbosity = verbosity
         self.clf = None
 
-    def getFeatures(self, data, framerate, isSignal=0, timestretchFactor=1.0):
+    def getFeatures(self, data, framerate, isSignal=0):
         fp = Fingerprinter()
         fp.setData(data, framerate)
-        times,freqs,Pxx = fp.getSpectrogram(timestretchFactor)
+        times,freqs,Pxx = fp.getSpectrogram()
 
         ztime = float(self.Ntime) / Pxx.shape[1] if Pxx.shape[1] > self.Ntime else 1
         zfreq = float(self.Nfreq) / Pxx.shape[0] if Pxx.shape[0] > self.Nfreq else 1
@@ -61,6 +64,8 @@ class Processor:
         tr = Trigger()
 
         self.YXtot = []
+        fnames = []
+        durations = []
         self.keywordDurations = []
 
         with warnings.catch_warnings():
@@ -71,12 +76,10 @@ class Processor:
                 if clip in bestThresh: tr.setParams({"THRESHOLD": bestThresh[clip]})
                 else: tr.setParams({"THRESHOLD": 600})
 
-                if clip.lower().startswith(signalword):
-                    isSignal = True
-                elif clip.lower().startswith("random"):
-                    isSignal = False
-                else:
-                    continue
+                if clip.lower().startswith(signalword): isSignal = True
+                elif clip.lower().startswith("random"): isSignal = False
+                elif clip.lower().startswith("background"): isSignal = False
+                else: continue
 
                 tr.readWav(basedir+clip)
                 subsamples = tr.getSubsamples()
@@ -85,13 +88,12 @@ class Processor:
                 if self.verbosity > 1: print "Loading clip %s (isSignal: %i) ==> %i subsamples" % (clip, isSignal, len(subsamples))
 
                 for ss in subsamples:
-                    if isSignal:
-                        self.keywordDurations.append( self.getSampleDuration(ss, framerate) )
+                    duration = self.getSampleDuration(ss, framerate) 
+                    if isSignal: self.keywordDurations.append(duration)
 
                     self.YXtot.append( self.getFeatures(ss,framerate,isSignal) )
-                    if self.DO_STRETCH:
-                        self.YXtot.append( self.getFeatures(ss,framerate,isSignal,timestretchFactor=1.20) )
-                        self.YXtot.append( self.getFeatures(ss,framerate,isSignal,timestretchFactor=0.80) )
+                    fnames.append(clip)
+                    durations.append(duration)
 
         self.YXtot = np.array(self.YXtot)
 
@@ -103,7 +105,9 @@ class Processor:
         np.save(outputname_meta, self.keywordDurations)
         if self.verbosity > 1: print "made %s and %s" % (outputname, outputname_meta)
 
-        self.trainAndTest()
+        idx_test, YXtest = self.trainAndTest()
+
+        return np.array(fnames)[idx_test], np.array(durations)[idx_test], YXtest
         # return score
 
     def nudge(self, Xtot, Ytot, w=3):
@@ -134,30 +138,41 @@ class Processor:
     def trainAndTest(self):
         self.clf = None
 
-        Xtot = self.YXtot[:,range(1,len(self.YXtot[0]))]
+        Xtot = self.YXtot[:,1:]
         Ytot = self.YXtot[:,0]
-
+        idx = np.arange(Xtot.shape[0])
 
         if self.verbosity > 1:
             print "Number of signal samples: %i" % int(np.sum(Ytot > 0.5))
             print "Number of background samples: %i" % int(np.sum(Ytot < 0.5))
 
-        X_train, X_test, Y_train, Y_test = cross_validation.train_test_split(Xtot, Ytot, test_size=0.30, random_state=43)
+        X_train, X_test, Y_train, Y_test, idx_train, idx_test = cross_validation.train_test_split(Xtot, Ytot, idx, test_size=1.0-self.TRAIN_FRAC, random_state=42)
 
-        if self.DO_NUDGE:
-            X_train, Y_train = self.nudge(X_train,Y_train, w=3)
+        if self.NUDGE_FRAC > 0.01:
+            X_train, Y_train = self.nudge(X_train,Y_train, w=int(self.NUDGE_FRAC*self.Ntime + 1))
 
-        if self.alg == "logistic":
-            self.clf = linear_model.LogisticRegression(C=5.0)
-        elif self.alg == "svm":
-            from sklearn import svm
-            self.clf = svm.SVC(probability=True)
-        elif self.alg == "perceptron":
-            self.clf = linear_model.Perceptron()
+        if self.alg == "logistic": self.clf = linear_model.LogisticRegression(C=4.0)
+        elif self.alg == "svm": self.clf = svm.SVC(probability=True)
+        elif self.alg == "adaboost": self.clf = ensemble.AdaBoostClassifier()
+        elif self.alg == "randforest": self.clf = ensemble.RandomForestClassifier()
+        elif self.alg == "bagging": self.clf = ensemble.BaggingClassifier()
+        elif self.alg == "gaussiannb": self.clf = naive_bayes.GaussianNB()
+        elif self.alg == "perceptron": self.clf = linear_model.Perceptron()
+        elif self.alg == "voting":
+            self.clf = ensemble.VotingClassifier(
+                    estimators=[
+                            ('lr',linear_model.LogisticRegression(C=4.0)),
+                            ('ada',ensemble.AdaBoostClassifier()),
+                            ('rf',ensemble.RandomForestClassifier()),
+                            ('bag',ensemble.BaggingClassifier()),
+                            ('gnb',naive_bayes.GaussianNB()),
+                            ('svm',svm.SVC(probability=True))
+                        ],
+                    voting='soft'
+                    )
 
         self.clf.fit(X_train, Y_train)
 
-        # from sklearn import cross_validation
         # scores = cross_validation.cross_val_score(self.clf, X_test, Y_test, cv=15)
         # print scores
         # print "score:",scores.mean(), scores.std()
@@ -168,11 +183,14 @@ class Processor:
             print "Score on testing set: %.2f" % self.clf.score(X_test, Y_test)
         
         # return scores.mean(), scores.std()
+        return idx_test, np.c_[Y_test, X_test]
 
     def predict(self, features):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore",category=Warning)
             return self.clf.predict_proba(features[1:])[0][1]
+            # print self.clf.decision_function(features[1:])
+            # return self.clf.decision_function(features[1:])
 
     def getKeywordProbability(self, data, framerate):
         features = self.getFeatures(data, framerate)
@@ -180,12 +198,44 @@ class Processor:
 
 if __name__ == '__main__':
     tr = Trigger()
-    proc = Processor()
-    tr.readWav("sounds/oknavsa4.wav")
 
-    subsamples = tr.getSubsamples()
-    framerate = tr.getFramerate()
-    for ss in subsamples[:1]:
-        img = proc.getFeatures(ss, framerate, 1)
-        # print img
-        # print img.shape
+    proc = Processor(Nfreq=15, Ntime=15, TRAIN_FRAC=0.90, NUDGE_FRAC=0.0, alg="logistic", verbosity=2)
+    # proc = Processor(Nfreq=25, Ntime=25, TRAIN_FRAC=0.70, DO_NUDGE=True, alg="voting", verbosity=2)
+    # proc = Processor(DO_NUDGE=True, alg="voting", verbosity=2)
+    fnames, durations, YXtot = proc.processTrainingSet(basedir="sounds/train/", signalword="oknavsa", savedir="data/")
+    fnames_new = []
+    for fname in fnames:
+        if fname.startswith("background_psr"): fname_new = "PSR"
+        elif fname.startswith("background"): fname_new = "BG"
+        elif fname.startswith("oknavsa_bg"): fname_new = "Navsa with BG"
+        elif fname.startswith("oknavsa_bmic"): fname_new = "Navsa with bad mic"
+        elif fname.startswith("oknavsa"): fname_new = "Navsa"
+        elif fname.startswith("random"): fname_new = "BG words"
+        else: fname_new = "unknown"
+        fnames_new.append(fname_new)
+    fnames = np.array(fnames_new)
+    scores = np.apply_along_axis(proc.predict, 1, YXtot)
+
+    fig, axs = plt.subplots(nrows=1, ncols=2) 
+    fig.set_size_inches(18.0,9.0)
+
+    names = ['BG','BG words','PSR','Navsa with BG','Navsa with bad mic','Navsa']
+    colors = ["orangered", "firebrick", "lightcoral", "teal", "skyblue", "dodgerblue"]
+
+    scores_names = []
+    durations_names = []
+    for name in names:
+        scores_names.append( scores[fnames==name] )
+        durations_names.append( durations[fnames==name] )
+
+    axs[0].hist(scores_names, 20,    range=(-0.05, 1.05), stacked=True, color=colors, histtype='stepfilled', label=names)
+    axs[1].hist(durations_names, 20,  range=(0.23, 1.25), stacked=True, color=colors, histtype='stepfilled', label=names)
+
+    axs[0].set_title("Signal probability")
+    axs[0].legend(prop={'size': 10})
+
+    axs[1].set_title("Phrase duration")
+    axs[1].legend(prop={'size': 10})
+
+    fig.savefig("alg.png", bbox_inches='tight')
+    u.web("alg.png")
