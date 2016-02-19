@@ -199,13 +199,14 @@ class Processor:
 if __name__ == '__main__':
     tr = Trigger()
 
-    proc = Processor(Nfreq=15, Ntime=15, TRAIN_FRAC=0.90, NUDGE_FRAC=0.0, alg="logistic", verbosity=2)
+    proc = Processor(Nfreq=15, Ntime=15, TRAIN_FRAC=0.50, NUDGE_FRAC=0.0, alg="logistic", verbosity=2)
     # proc = Processor(Nfreq=25, Ntime=25, TRAIN_FRAC=0.70, DO_NUDGE=True, alg="voting", verbosity=2)
     # proc = Processor(DO_NUDGE=True, alg="voting", verbosity=2)
     fnames, durations, YXtot = proc.processTrainingSet(basedir="sounds/train/", signalword="oknavsa", savedir="data/")
     fnames_new = []
     for fname in fnames:
         if fname.startswith("background_psr"): fname_new = "PSR"
+        if fname.startswith("background_typing"): fname_new = "BG typing"
         elif fname.startswith("background"): fname_new = "BG"
         elif fname.startswith("oknavsa_bg"): fname_new = "Navsa with BG"
         elif fname.startswith("oknavsa_bmic"): fname_new = "Navsa with bad mic"
@@ -219,8 +220,8 @@ if __name__ == '__main__':
     fig, axs = plt.subplots(nrows=1, ncols=2) 
     fig.set_size_inches(18.0,9.0)
 
-    names = ['BG','BG words','PSR','Navsa with BG','Navsa with bad mic','Navsa']
-    colors = ["orangered", "firebrick", "lightcoral", "teal", "skyblue", "dodgerblue"]
+    names = ['BG','BG typing','BG words','PSR','Navsa with BG','Navsa with bad mic','Navsa']
+    colors = ["red", "orangered", "firebrick", "lightcoral", "teal", "skyblue", "dodgerblue"]
 
     scores_names = []
     durations_names = []
