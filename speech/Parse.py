@@ -4,11 +4,12 @@ from pprint import pprint
 import Utils as u
 import datetime, time
 from dateutil import parser
+import config
 
 
 class Parser:
-    def __init__(self, site="apiai"):
-        self.site = site
+    def __init__(self):
+        self.site = config.site
         pass
 
     def do_test(self, typ="apiai"):

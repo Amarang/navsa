@@ -6,23 +6,22 @@ import Utils as u
 from Process import Processor
 from Trigger import Trigger
 from Parse import Parser
-# from Lights import Lights
+import config
 
-# site = "apiai"
-site = "witai"
-haveLeds = False
+haveLeds = config.device == "mypi"
 proc = Processor()
-parser = Parser(site=site)
+parser = Parser()
 if haveLeds:
+    from Lights import Lights
     led = Lights()
     led.stop()
     tr = Trigger(verbose=True, led=led)
 else:
     tr = Trigger(verbose=True)
 
-proc.processTrainingSet(basedir="sounds/train/", signalword="oknavsa", savedir="data/")
+# proc.processTrainingSet(basedir="sounds/train/", signalword="oknavsa", savedir="data/")
 # proc.processTrainingSet(basedir="16khz/", signalword="oknavsa", savedir="data/")
-# proc.loadTrainData("data/imagedata_15_15.npy")
+proc.loadTrainData("data/imagedata_15_15.npy")
 
 #if not in this range, we want to not fingerprint it to save time and trouble
 lower,upper = proc.getKeywordDurationRange()
@@ -40,19 +39,20 @@ def myCallback(trigger, data, data_raw):
     if not trigger.hasSaidKeyword():
         t0 = time.time()
         confidence = proc.getKeywordProbability(data, framerate)
-        print "took %.2fms to classify" % (1000.0*(time.time()-t0))
+        print "took %.2fms to classify, score: %.2f" % (1000.0*(time.time()-t0), confidence)
 
         if confidence > 0.75:
         # if confidence > 0.01:
             print "duration: %.2f s, score: %.2f" % (1.0*len(data)/framerate, confidence)
-            if haveLeds: led.start("flip", color="b")
+            # if haveLeds: led.start("flip", color="b")
+            if haveLeds: led.start("decay", duration=3.0, color="b")
             u.play("../sounds/notification.wav", blocking=False)
             # u.toast("What's up?")
             trigger.saidKeyword()
     else:
         print "duration: %.2f s" % (1.0*len(data)/framerate)
 
-        out = u.get_voice(data_raw, site)
+        out = u.get_voice(data_raw)
         print out
         parser.handle(out)
         trigger.finishedQuery()

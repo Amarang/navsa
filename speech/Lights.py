@@ -64,9 +64,22 @@ class Lights:
         p.start(0)
         for i in range(int(duration*updateFreq)):
             dt = 1.0/updateFreq
-            # abs(sin(\omega t)), frequency divided by two because absolute value effectively doubles it
             val =  100.0*math.sin(6.28*(1.0*frequency/2) * i*dt)
             if val < 0: val = 0
+            p.ChangeDutyCycle(val)
+            time.sleep(dt)
+        p.stop()
+
+    def action_decay(self, duration=3.0, color='blue'):
+        pin = self.color_to_pin(color)
+        p = gp.PWM(pin,100) # LED pulsing frequency. don't touch
+        updateFreq = 30 # update frequency (how smooth is the transition)
+        p.start(0)
+        for i in range(int(duration*updateFreq)):
+            dt = 1.0/updateFreq
+
+            val = 100.0*math.exp(-1.0*i*dt / (duration/5)) - 1.0
+            if val < 0: break
             p.ChangeDutyCycle(val)
             time.sleep(dt)
         p.stop()
@@ -86,6 +99,7 @@ class Lights:
         elif action == "flip": target = self.action_flip
         elif action == "sine": target = self.action_sine
         elif action == "pulse": target = self.action_pulse
+        elif action == "decay": target = self.action_decay
         else: 
             print "action", action, "not recognized."
             return dummy
@@ -110,12 +124,15 @@ class Lights:
 if __name__=="__main__":
     led = Lights()
 
-
-    stopper = led.start("pulse", duration=6.0, frequency=1, color='b', blocking=False)
-
+    stopper = led.start("decay", duration=3.0, color='b', blocking=False)
     print "here"
     time.sleep(1)
     print "here 2"
-
     stopper()
+
+    # stopper = led.start("pulse", duration=6.0, frequency=1, color='b', blocking=False)
+    # print "here"
+    # time.sleep(1)
+    # print "here 2"
+    # stopper()
 

@@ -11,6 +11,9 @@ timezone = "America/Los_Angeles"
 # MEH
 nick = True
 
+# AI API: witai or apiai
+site = "witai"
+
 # WHAT DEVICE
 device = "pc"
 if "linux" in sys.platform.lower():

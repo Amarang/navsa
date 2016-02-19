@@ -124,7 +124,8 @@ def get_voice_api(data):
     resp = requests.post(url, headers=headers, files=files)
     return resp.json()
 
-def get_voice(data, site):
+def get_voice(data):
+    site = config.site
     if site=="apiai": return get_voice_api(data)
     elif site=="witai": return get_voice_wit(data)
     else: return None
