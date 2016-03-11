@@ -8,9 +8,17 @@ def getQuote():
     try:
         with open("../misc/%s.txt" % quotetype) as fh:
             data = fh.readlines()
-    except:
+    except: pass
+
+    try:
         with open("misc/%s.txt" % quotetype) as fh:
             data = fh.readlines()
+    except: pass
+
+    try:
+        with open("/Users/namin/cron/navsa/misc/%s.txt" % quotetype) as fh:
+            data = fh.readlines()
+    except: pass
 
     quote = random.choice(data).strip()
     return "%s: %s" % (quotetype.title(),quote)
