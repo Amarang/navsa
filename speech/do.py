@@ -15,7 +15,7 @@ if haveLeds:
     from Lights import Lights
     led = Lights()
     led.stop()
-    tr = Trigger(verbose=True, led=led)
+    tr = Trigger(verbose=True, led=led, AMBIENT_MULT = 1.9)
 else:
     tr = Trigger(verbose=True)
 
@@ -27,8 +27,8 @@ proc.loadTrainData("data/imagedata_15_15.npy")
 lower,upper = proc.getKeywordDurationRange()
 tr.setParams({"MIN_WORD_TIME": lower, "MAX_WORD_TIME": upper})
 
-# tr.setParams({"THRESHOLD": 50})
-tr.getAmbientLevels(duration=1.5)
+tr.setParams({"THRESHOLD": 150})
+# tr.getAmbientLevels(duration=0.7)
 
 
 print "Now will score realtime audio"
@@ -39,9 +39,10 @@ def myCallback(trigger, data, data_raw):
     if not trigger.hasSaidKeyword():
         t0 = time.time()
         confidence = proc.getKeywordProbability(data, framerate)
-        print "took %.2fms to classify, score: %.2f" % (1000.0*(time.time()-t0), confidence)
+        print "took %.2fms to classify %.2fs clip, score: %.2f" \
+                % (1000.0*(time.time()-t0), 1.0*len(data)/framerate, confidence)
 
-        if confidence > 0.75:
+        if confidence > 0.70:
         # if confidence > 0.01:
             print "duration: %.2f s, score: %.2f" % (1.0*len(data)/framerate, confidence)
             # if haveLeds: led.start("flip", color="b")

@@ -6,13 +6,13 @@ import numpy as np
 
 class Trigger:
     def __init__(self,DECAYRATE = 1.5, TWINDOW = 0.2, THRESHOLD = 600, FALLING_THRESHOLD_RATIO = 0.8, \
-                 PAUSE_THRESHOLD = 0.03, MIN_WORD_TIME = 0.27, MAX_WORD_TIME = 1.2, AMBIENT_MULT = 2.5, KEYWORD_DELAY = 2.5,
+                 PAUSE_THRESHOLD = 0.03, MIN_WORD_TIME = 0.27, MAX_WORD_TIME = 1.2, AMBIENT_MULT = 2.5, KEYWORD_DELAY = 3.5,
                  verbose = False, led=None):
 
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 1
         self.RATE = 11025
-        self.CHUNK = 512
+        self.CHUNK = 512 # 256 has better recognition performance?
         self.DTYPE='Int16'
 
         self.params = {}
@@ -125,6 +125,7 @@ class Trigger:
     def saidKeyword(self): # have said keyword, so now listen for query
         self.saidKeywordHowLongAgo = 0.0
         self.saidKeywordRecently = True
+        self.updateParams()
 
     def hasSaidKeyword(self):
         return self.saidKeywordRecently
@@ -218,7 +219,7 @@ class Trigger:
                 sys.stdout.write("\r" + line + " ")
                 sys.stdout.flush()
 
-            if self.saidKeywordRecently and self.saidKeywordHowLongAgo > self.params["KEYWORD_DELAY"]:
+            if self.saidKeywordRecently and self.saidKeywordHowLongAgo > self.params["KEYWORD_DELAY"] and not self.recording:
                 self.updateParams()
 
             if self.recording:
@@ -245,7 +246,7 @@ class Trigger:
                 if meanRMS > self.params["THRESHOLD"]:
                     self.recording = True
                     timeBelowThresh = 0.0
-                    self.updateParams()
+                    # self.updateParams()
                     # self.recs.append(tm)
                     recframes.append(data)
 
