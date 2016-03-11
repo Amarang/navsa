@@ -4,10 +4,18 @@ from tqdm import tqdm
  
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
-RATE = 11025
-CHUNK = 512
-RECORD_SECONDS = 120
-WAVE_OUTPUT_FILENAME = "test.wav"
+RATE = 16000
+CHUNK = 1024
+RECORD_SECONDS = 600
+where = "psr"
+typ = "bg"
+device = "laptop"
+
+tag = "%s_%s_%s" % (where, typ, device)
+
+WAVE_OUTPUT_FILENAME = "%s_%i_%i.wav" % (tag, RATE, RECORD_SECONDS)
+
+print "will save to %s" % WAVE_OUTPUT_FILENAME
 
 audio = pyaudio.PyAudio()
 
