@@ -37,5 +37,10 @@ sudo pip install pocketsphinx
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib 
 # get dic and lm file from http://www.speech.cs.cmu.edu/tools/lmtool-new.html
 pocketsphinx_continuous -lm 3199.lm -dict 3199.dic -keyphrase "OKAY PI" -kws_threshold 1e-20 -inmic yes
+
+cd navsa/speech/
+# download language model
+curl -o cmusphinx-en-us-5.2.tar.gz "http://iweb.dl.sourceforge.net/project/cmusphinx/Acoustic%20and%20Language%20Models/US%20English%20Generic%20Acoustic%20Model/cmusphinx-en-us-5.2.tar.gz"
+tar -xf cmusphinx-en-us-5.2.tar.gz
 ```
 
