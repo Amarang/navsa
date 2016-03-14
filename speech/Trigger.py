@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 class Trigger:
-    def __init__(self,DECAYRATE = 1.5, TWINDOW = 0.2, THRESHOLD = 600, FALLING_THRESHOLD_RATIO = 0.8, \
+    def __init__(self,DECAYRATE = 0.5, TWINDOW = 0.2, THRESHOLD = 600, FALLING_THRESHOLD_RATIO = 0.8, \
                  PAUSE_THRESHOLD = 0.03, MIN_WORD_TIME = 0.27, MAX_WORD_TIME = 1.2, AMBIENT_MULT = 2.5, KEYWORD_DELAY = 3.5,
                  verbose = False, led=None):
 

@@ -13,11 +13,15 @@ config.set_string('-hmm', '/usr/local/share/pocketsphinx/model/en-us/en-us')
 config.set_string('-dict', '7705.dic')
 config.set_string('-lm', '7705.lm')
 config.set_string('-logfn', 'dump.log')
-# config.set_string('-debug', '1')
+config.set_string('-debug', '1')
 
 
-config.set_boolean('-bestpath', False) # supposedly speeds it up (default is True)
+
+
 config.set_float('-vad_threshold', 3.0) # default is 2
+# config.set_float('-ds', 2) # default is http://cmusphinx.sourceforge.net/wiki/pocketsphinxhandhelds
+# config.set_float('-topn', 2) # default is 4
+# config.set_float('-maxhmmpf', 1000)
 config.set_float('-wip', 1e-4) #  0.005           Silence word transition probability
 config.set_float('-silprob', 0.1) # 0.65            Word insertion penalty
 
@@ -47,7 +51,7 @@ def callback(buf,frame_count, time_info, status):
     if buf:
         t0 = time.clock()
         decoder.process_raw(buf, False, False)
-        print "process_raw took %.2f ms" % (1000.0*(time.clock()-t0))
+        print "process_raw took %.2f ms" % ((time.clock()-t0))
 
         # t0 = time.clock()
         # print decoder.get_in_speech()

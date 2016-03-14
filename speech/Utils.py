@@ -24,7 +24,13 @@ def say(text, voice=None):
         elif device == "pc": cmd += 'cat temp.wav > /dev/dsp ; ) &'
         elif device == "mac": cmd += 'afplay temp.wav ; ) &'
     elif say_type == "fromMac":
-        cmd = """(ssh -q namin@squark.physics.ucsb.edu "cd ~/sandbox/sound ; say -v %s \\'%s\\' -o temp.aiff ; /usr/local/bin/sox temp.aiff temp.wav " ; scp -q namin@squark.physics.ucsb.edu:~/sandbox/sound/temp.wav . ; """ % (voice, text)
+        vol = 1.0
+        if device == "mypi": vol *= 2.5
+        cmd = """(ssh -q namin@squark.physics.ucsb.edu "cd ~/sandbox/sound ; 
+                  say -v %s \\'%s\\' -o temp.aiff ;
+                  /usr/local/bin/sox -v %.1f temp.aiff temp.wav >& /dev/null " ;
+                  scp -q namin@squark.physics.ucsb.edu:~/sandbox/sound/temp.wav . ;
+                  """ % (voice, text, vol)
         if device == "officepi": cmd += 'aplay -q temp.wav ; ) &'
         elif device == "mypi": cmd += 'aplay -q -D hw:1,0 temp.wav ; ) &'
         elif device == "pc": cmd += 'cat temp.wav > /dev/dsp ; ) &'
@@ -55,6 +61,12 @@ def play(fname, blocking=False):
     elif config.device == "pc": cmd += '(cat %s > /dev/dsp)' % fname
     if not blocking: cmd += ' &'
     if cmd: os.system(cmd)
+
+def beep(blocking=False):
+    if config.device == "mypi":
+        play("../sounds/notification_loud.wav", blocking=blocking)
+    else:
+        play("../sounds/notification.wav", blocking=blocking)
 
 def toTimestamp(dt):
     return int(time.mktime(dt.timetuple()))
@@ -149,4 +161,5 @@ def get_text_api(query):
     return resp.json()
 
 if __name__=='__main__':
-    toast("what's up")
+    pass
+    # toast("what's up")

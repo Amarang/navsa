@@ -44,3 +44,6 @@ curl -o cmusphinx-en-us-5.2.tar.gz "http://iweb.dl.sourceforge.net/project/cmusp
 tar -xf cmusphinx-en-us-5.2.tar.gz
 ```
 
+
+# misc instructions for pi
+- to increase volume, do `alsamixer`, hit <F6> to choose output device, then j, k to change volume. <Esc> when done

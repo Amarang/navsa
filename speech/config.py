@@ -30,11 +30,13 @@ say_type["pc"] = "fromMac"
 # say_type["pc"] = "cereproc"
 say_type["mac"] = "regular"
 say_type["officepi"] = "fromMac"
-say_type["mypi"] = "fromMac"
+# say_type["mypi"] = "fromMac"
+say_type["mypi"] = "cereproc"
 
 default_voice = {}
 default_voice["fromMac"] = "Samantha" # Veena
-default_voice["cereproc"] = "Jess" # Hannah
+# default_voice["cereproc"] = "Jess" # Hannah
+default_voice["cereproc"] = "Hannah" # Hannah
 default_voice["regular"] = "Samantha"
 
 # SOME PATHS

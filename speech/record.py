@@ -1,3 +1,4 @@
+import sys, os
 import pyaudio
 import wave
 from tqdm import tqdm 
@@ -6,16 +7,20 @@ FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 16000
 CHUNK = 1024
-RECORD_SECONDS = 600
-where = "psr"
-typ = "bg"
-device = "laptop"
+RECORD_SECONDS = 10
+where = "home" # home, office, psr, etc.
+typ = "navsa" # bg, navsa, etc.
+device = "pi" # laptop, pi, mac, etc.
 
 tag = "%s_%s_%s" % (where, typ, device)
 
 WAVE_OUTPUT_FILENAME = "%s_%i_%i.wav" % (tag, RATE, RECORD_SECONDS)
 
-print "will save to %s" % WAVE_OUTPUT_FILENAME
+if os.path.isfile(WAVE_OUTPUT_FILENAME):
+    print "file already exists, exiting"
+    sys.exit()
+else:
+    print "will save to %s" % WAVE_OUTPUT_FILENAME
 
 audio = pyaudio.PyAudio()
 
