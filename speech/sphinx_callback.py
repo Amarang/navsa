@@ -7,37 +7,40 @@ import pyaudio
 import Utils as u
 
 class Listener:
-    def __init__(self, hmm_type=1, vad_threshold=3.5, pl_window=5, wip=1e-4, silprob=0.3, bestpath=True):
+    def __init__(self, hmm_type=1, vad_threshold=3.5, pl_window=10, wip=1e-4, silprob=0.3, bestpath=True):
         self.CHUNK = 1024
         self.RATE = 16000
         # Create a decoder with certain model
-        config = Decoder.default_config()
+        self.config = Decoder.default_config()
 
         if hmm_type == 0:
-            config.set_string('-hmm', '/usr/local/share/pocketsphinx/model/en-us/en-us')
+            self.config.set_string('-hmm', '/usr/local/share/pocketsphinx/model/en-us/en-us')
         elif hmm_type == 1:
-            config.set_string('-hmm', 'test/cmusphinx-en-us-5.2')
+            self.config.set_string('-hmm', 'test/cmusphinx-en-us-5.2')
 
-        config.set_string('-dict', 'test/7705.dic')
-        config.set_string('-lm', 'test/7705.lm')
+        self.config.set_string('-dict', 'test/7705.dic')
+        self.config.set_string('-lm', 'test/7705.lm')
 
         # config.set_string('-logfn', 'test/dump.log')
-        config.set_string('-logfn', '/dev/null')
-        config.set_string('-debug', '1')
+        self.config.set_string('-logfn', '/dev/null')
+        self.config.set_string('-debug', '1')
 
 
         # default is http://cmusphinx.sourceforge.net/wiki/pocketsphinxhandhelds
-        config.set_boolean('-bestpath', bestpath) # default is true
-        config.set_float('-vad_threshold', vad_threshold) # default is 2
-        config.set_float("-pl_window", pl_window) # default is 5, range is 0 to 10
-        config.set_float('-wip', wip) #  0.005           Silence word transition probability
-        config.set_float('-silprob', silprob) # 0.65            Word insertion penalty
+        self.config.set_boolean('-bestpath', bestpath) # default is true
+        self.config.set_float('-vad_threshold', vad_threshold) # default is 2
+        self.config.set_float("-pl_window", pl_window) # default is 5, range is 0 to 10
+        self.config.set_float('-wip', wip) #  0.005           Silence word transition probability
+        self.config.set_float('-silprob', silprob) # 0.65            Word insertion penalty
 
         self.t0_d = time.time()
-        self.decoder = Decoder(config)
+        self.decoder = Decoder(self.config)
         self.t1_d = time.time()
 
         self.timedeque = deque(maxlen=50)
+
+    def reset(self):
+        self.decoder = Decoder(self.config)
 
     def is_keyword(self, hyp, seg=None):
         if "navsa" in hyp.lower(): return True
@@ -85,7 +88,7 @@ class Listener:
                 quit()
         
 
-    def listen_file(self, fname):
+    def listen_file(self, fname, shutup=False):
         # stream = open("psr_bg_laptop_16000_240.wav", "rb")
         stream = open(fname, "rb")
         self.decoder.start_utt()
@@ -101,7 +104,8 @@ class Listener:
             if hypothesis != None:
                 # print [(seg.word, seg.prob, seg.start_frame, seg.end_frame) for seg in self.decoder.seg()]
                 hypstr = str(self.decoder.hyp().hypstr)
-                print hypstr
+                if not shutup:
+                    print hypstr
 
                 nwords += 1
                 if self.is_keyword(hypstr):
@@ -121,23 +125,21 @@ class Listener:
         # time to run through audio file
         trun = t1 - t0
 
-        return {'tdec': tdec, 'trun': trun, 'nwords': nwords, 'nkeywords': nkeywords}
+        return {'fname': fname, 'tdec': tdec, 'trun': trun, 'nwords': nwords, 'nkeywords': nkeywords}
 
 
 if __name__ == '__main__':
 
     # lst = Listener(hmm_type=0)
     lst = Listener()
-    # results_sig = lst.listen_file('office_bg_mac_16000_240.wav')
-    # results_sig = lst.listen_file('home_navsa_pi_16000_120.wav')
-    # results_sig = lst.listen_file('psr_bg_laptop_16000_240.wav')
-    # print results_sig
-    lst.listen_mic()
 
-    
+    results_sig = lst.listen_file('office_bg_mac_16000_360.wav', shutup=True); print results_sig
+    lst.reset()
+    results_sig = lst.listen_file('home_navsa_pi_16000_120.wav', shutup=True); print results_sig
+    lst.reset()
+    results_sig = lst.listen_file('psr_bg_laptop_16000_240.wav', shutup=True); print results_sig
 
-    
-
+    # lst.listen_mic()
 
     # import itertools, random
     # p = list(itertools.product(
