@@ -4,7 +4,6 @@ from sphinxbase.sphinxbase import *
 from collections import deque
 import pyaudio
 
-import Lights
 import Utils as u
 
 class Listener:
@@ -127,9 +126,12 @@ class Listener:
 
 if __name__ == '__main__':
 
-    lst = Listener(hmm_type=0)
-    # lst = Listener()
+    # lst = Listener(hmm_type=0)
+    lst = Listener()
+    # results_sig = lst.listen_file('office_bg_mac_16000_240.wav')
     # results_sig = lst.listen_file('home_navsa_pi_16000_120.wav')
+    # results_sig = lst.listen_file('psr_bg_laptop_16000_240.wav')
+    # print results_sig
     lst.listen_mic()
 
     

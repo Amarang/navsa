@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, time
 import pyaudio
 import wave
 from tqdm import tqdm 
@@ -8,9 +8,9 @@ CHANNELS = 1
 RATE = 16000
 CHUNK = 1024
 RECORD_SECONDS = 10
-where = "home" # home, office, psr, etc.
-typ = "navsa" # bg, navsa, etc.
-device = "pi" # laptop, pi, mac, etc.
+where = "office" # home, office, psr, etc.
+typ = "bg" # bg, navsa, etc.
+device = "mac" # laptop, pi, mac, etc.
 
 tag = "%s_%s_%s" % (where, typ, device)
 
@@ -24,25 +24,25 @@ else:
 
 audio = pyaudio.PyAudio()
 
+def handle_audio(buf, frame_count, time_info, status):
+    frames.append(buf)
+    return (buf, pyaudio.paContinue)
 
- 
 # start Recording
 crappy = False
 if crappy:
     for i in range(audio.get_device_count()):
         if "USB PnP" in audio.get_device_info_by_index(i)["name"]: idx = i
-    stream = audio.open(format=FORMAT,channels=CHANNELS,rate=RATE,input=True,frames_per_buffer=CHUNK,input_device_index=idx)
+    stream = audio.open(format=FORMAT,channels=CHANNELS,rate=RATE,input=True,frames_per_buffer=CHUNK,input_device_index=idx, stream_callback = handle_audio)
 else:
-    stream = audio.open(format=FORMAT,channels=CHANNELS,rate=RATE,input=True,frames_per_buffer=CHUNK)
+    stream = audio.open(format=FORMAT,channels=CHANNELS,rate=RATE,input=True,frames_per_buffer=CHUNK, stream_callback = handle_audio)
 
 print "recording..."
 frames = []
- 
-for i in tqdm(range(0, int(RATE / CHUNK * RECORD_SECONDS))):
-    data = stream.read(CHUNK)
-    frames.append(data)
+stream.start_stream()
+for i in tqdm(range(10*RECORD_SECONDS)):
+    time.sleep(0.1)
 print "finished recording"
- 
  
 # stop Recording
 stream.stop_stream()
