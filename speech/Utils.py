@@ -48,7 +48,8 @@ def toast(text, title=""):
     if config.device == "mac":
         # http://apple.stackexchange.com/questions/57412/how-can-i-trigger-a-notification-center-notification-from-an-applescript-or-shel
         # sounds in /System/Library/Sounds
-        cmd += "osascript -e 'display notification \"%s\" with title \"%s\" sound name \"Submarine.aiff\"'" % (text, title)
+        # cmd += """ osascript -e "display notification \\"%s\\" with title \\"%s\\" sound name \\"Submarine.aiff\\"" """ % (text, title)
+        cmd += """ terminal-notifier -sound "Submarine.aiff" -title "%s" -message "%s" -appIcon "" -contentImage "../images/navsalogo.png" """ % (text, title)
     elif config.device == "pc":
         cmd += """%s -t "%s" -m "%s" -p '%s' """ % (config.toasterpath, title, text, config.logopath)
     if cmd: os.system(cmd)
@@ -162,4 +163,4 @@ def get_text_api(query):
 
 if __name__=='__main__':
     pass
-    # toast("what's up")
+    toast("what's up")
