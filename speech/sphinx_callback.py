@@ -26,15 +26,15 @@ class Listener:
         if hmm_type == 0:
             self.config.set_string('-hmm', '/usr/local/share/pocketsphinx/model/en-us/en-us')
         elif hmm_type == 1:
-            self.config.set_string('-hmm', 'test/cmusphinx-en-us-5.2')
+            self.config.set_string('-hmm', 'model/cmusphinx-en-us-5.2')
 
-        self.config.set_string('-dict', 'test/7705.dic')
+        self.config.set_string('-dict', 'model/7705.dic')
 
         if do_keyphrase:
             self.config.set_string('-keyphrase', keyphrase)
             self.config.set_float('-kws_threshold', kws_threshold)
         else:
-            self.config.set_string('-lm', 'test/7705.lm')
+            self.config.set_string('-lm', 'model/7705.lm')
 
 
         self.config.set_string('-logfn', '/dev/null')
@@ -49,8 +49,8 @@ class Listener:
 
         self.decoder = Decoder(self.config)
 
-        self.deque_time = deque(maxlen=50)
-        self.deque_mean = deque(maxlen=5)
+        self.deque_time = deque(maxlen=20)
+        self.deque_mean = deque(maxlen=20)
 
         self.mic = False
         self.wf = None
@@ -195,17 +195,15 @@ if __name__ == '__main__':
     # lst = Listener(hmm_type=0)
     lst = Listener(do_keyphrase=True)
 
-    results_sig = lst.listen_file('office_bg_mac_16000_360.wav', shutup=True); print results_sig
-    lst.reset()
-    results_sig = lst.listen_file('home_navsa_pi_16000_120.wav', shutup=True); print results_sig
-    lst.reset()
-    results_sig = lst.listen_file('psr_bg_laptop_16000_240.wav', shutup=True); print results_sig
-    lst.reset()
-    results_sig = lst.listen_file('psr_bg_laptop_16000_600.wav', shutup=True); print results_sig
+    # results_sig = lst.listen_file('sounds/test/office_bg_mac_16000_360.wav', shutup=True); print results_sig
+    # lst.reset()
+    # results_sig = lst.listen_file('sounds/test/home_navsa_pi_16000_120.wav', shutup=True); print results_sig
+    # lst.reset()
+    # results_sig = lst.listen_file('sounds/test/psr_bg_laptop_16000_600.wav', shutup=True); print results_sig
 
-    # lst.listen_file_realtime('home_navsa_pi_16000_120.wav')
+    # lst.listen_file_realtime('sounds/test/home_navsa_pi_16000_120.wav')
 
-    # lst.listen_mic()
+    lst.listen_mic()
 
     # import itertools, random
     # p = list(itertools.product(
@@ -217,19 +215,15 @@ if __name__ == '__main__':
     #     vad_threshold, pl_window, wip, silprob = random.choice(p)
     #     for hmm_type in [0,1]:
     #         for bestpath in [True, False]:
-
     #             params = { "hmm_type":hmm_type, "vad_threshold":vad_threshold, "pl_window":pl_window, "wip":wip, "silprob":silprob, "bestpath":bestpath }
     #             print "using params:", params
     #             lst = Listener(**params)
-
     #             results_sig = lst.listen_file('home_navsa_pi_16000_120.wav')
     #             results_bg = lst.listen_file('psr_bg_laptop_16000_240.wav')
     #             print "results:", results_bg, results_sig
-
     #             obj_to_save = params
     #             for key in results_bg: obj_to_save[key+"_bg"] = results_bg[key]
     #             for key in results_sig: obj_to_save[key+"_sig"] = results_sig[key]
-
     #             print "obj:",obj_to_save
     #             sys.stdout.flush()
 

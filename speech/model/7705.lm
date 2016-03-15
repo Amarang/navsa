@@ -1,0 +1,50 @@
+Language model created by QuickLM on Wed Mar  9 21:29:44 EST 2016
+Copyright (c) 1996-2010 Carnegie Mellon University and Alexander I. Rudnicky
+
+The model is in standard ARPA format, designed by Doug Paul while he was at MITRE.
+
+The code that was used to produce this language model is available in Open Source.
+Please visit http://www.speech.cs.cmu.edu/tools/ for more information
+
+The (fixed) discount mass is 0.5. The backoffs are computed using the ratio method.
+This model based on a corpus of 6 sentences and 8 words
+
+\data\
+ngram 1=7
+ngram 2=10
+ngram 3=10
+
+\1-grams:
+-0.9031 </s> -0.3010
+-0.9031 <s> -0.2430
+-1.3802 GOOGLE -0.2430
+-1.3802 HEY -0.2632
+-1.3802 NAVSA -0.2430
+-1.0792 OK -0.2430
+-1.6812 PI -0.2430
+
+\2-grams:
+-0.7782 <s> HEY 0.0000
+-0.4771 <s> OK 0.0000
+-0.3010 GOOGLE </s> -0.3010
+-0.6021 HEY GOOGLE 0.0000
+-0.6021 HEY NAVSA 0.0000
+-0.3010 NAVSA </s> -0.3010
+-0.9031 OK GOOGLE 0.0000
+-0.9031 OK NAVSA 0.0000
+-0.9031 OK PI 0.0000
+-0.3010 PI </s> -0.3010
+
+\3-grams:
+-0.6021 <s> HEY GOOGLE
+-0.6021 <s> HEY NAVSA
+-0.9031 <s> OK GOOGLE
+-0.9031 <s> OK NAVSA
+-0.9031 <s> OK PI
+-0.3010 HEY GOOGLE </s>
+-0.3010 HEY NAVSA </s>
+-0.3010 OK GOOGLE </s>
+-0.3010 OK NAVSA </s>
+-0.3010 OK PI </s>
+
+\end\
