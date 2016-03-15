@@ -10,7 +10,8 @@ import wave
 import Utils as u
 
 class Listener:
-    def __init__(self, hmm_type=1, vad_threshold=3.5, pl_window=10, wip=1e-4, silprob=0.3, bestpath=True):
+    def __init__(self, hmm_type=1, vad_threshold=3.5, pl_window=10, wip=1e-4, 
+                  silprob=0.3, bestpath=True, do_keyphrase=False, keyphrase="NAVSA", kws_threshold=1e-4):
         self.CHUNK = 1024
         self.RATE = 16000
         self.FORMAT = pyaudio.paInt16
@@ -28,7 +29,13 @@ class Listener:
             self.config.set_string('-hmm', 'test/cmusphinx-en-us-5.2')
 
         self.config.set_string('-dict', 'test/7705.dic')
-        self.config.set_string('-lm', 'test/7705.lm')
+
+        if do_keyphrase:
+            self.config.set_string('-keyphrase', keyphrase)
+            self.config.set_float('-kws_threshold', kws_threshold)
+        else:
+            self.config.set_string('-lm', 'test/7705.lm')
+
 
         self.config.set_string('-logfn', '/dev/null')
         self.config.set_string('-debug', '1')
@@ -40,9 +47,7 @@ class Listener:
         self.config.set_float('-wip', wip) #  0.005           Silence word transition probability
         self.config.set_float('-silprob', silprob) # 0.65            Word insertion penalty
 
-        self.t0_d = time.time()
         self.decoder = Decoder(self.config)
-        self.t1_d = time.time()
 
         self.deque_time = deque(maxlen=50)
         self.deque_mean = deque(maxlen=5)
@@ -131,7 +136,6 @@ class Listener:
         p = pyaudio.PyAudio()
 
         self.decoder.start_utt()
-        print self.wf.getframerate()
         stream = p.open(format=p.get_format_from_width(self.wf.getsampwidth()), channels=self.wf.getnchannels(), frames_per_buffer=self.CHUNK,rate=self.wf.getframerate(), input=True, stream_callback=self.handle_audio)
         print "starting"
         stream.start_stream()
@@ -181,30 +185,25 @@ class Listener:
 
         self.decoder.end_utt()
 
-        t1 = time.time()
+        trun = time.time() - t0
 
-
-        # time to make decoder
-        tdec = self.t1_d - self.t0_d
-        
-        # time to run through audio file
-        trun = t1 - t0
-
-        return {'fname': fname, 'tdec': tdec, 'trun': trun, 'nwords': nwords, 'nkeywords': nkeywords}
+        return {'fname': fname, 'trun': trun, 'nwords': nwords, 'nkeywords': nkeywords}
 
 
 if __name__ == '__main__':
 
     # lst = Listener(hmm_type=0)
-    lst = Listener()
+    lst = Listener(do_keyphrase=True)
 
-    # results_sig = lst.listen_file('office_bg_mac_16000_360.wav', shutup=True); print results_sig
-    # lst.reset()
-    # results_sig = lst.listen_file('home_navsa_pi_16000_120.wav', shutup=True); print results_sig
-    # lst.reset()
-    # results_sig = lst.listen_file('psr_bg_laptop_16000_240.wav', shutup=True); print results_sig
+    results_sig = lst.listen_file('office_bg_mac_16000_360.wav', shutup=True); print results_sig
+    lst.reset()
+    results_sig = lst.listen_file('home_navsa_pi_16000_120.wav', shutup=True); print results_sig
+    lst.reset()
+    results_sig = lst.listen_file('psr_bg_laptop_16000_240.wav', shutup=True); print results_sig
+    lst.reset()
+    results_sig = lst.listen_file('psr_bg_laptop_16000_600.wav', shutup=True); print results_sig
 
-    lst.listen_file_realtime('home_navsa_pi_16000_120.wav')
+    # lst.listen_file_realtime('home_navsa_pi_16000_120.wav')
 
     # lst.listen_mic()
 
