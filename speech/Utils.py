@@ -162,5 +162,6 @@ def get_text_api(query):
     return resp.json()
 
 if __name__=='__main__':
-    pass
+    # pass
     toast("what's up")
+    beep()

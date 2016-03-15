@@ -4,6 +4,8 @@ from sphinxbase.sphinxbase import *
 from collections import deque
 import pyaudio
 import audioop
+import math
+import wave
 
 import Utils as u
 
@@ -13,7 +15,7 @@ class Listener:
         self.RATE = 16000
         self.FORMAT = pyaudio.paInt16
 
-        self.RUN_SECONDS = 10
+        self.RUN_SECONDS = 1000
 
         self.sampwidth = pyaudio.get_sample_size(self.FORMAT)
 
@@ -27,6 +29,7 @@ class Listener:
 
         self.config.set_string('-dict', 'test/7705.dic')
         self.config.set_string('-lm', 'test/7705.lm')
+
         self.config.set_string('-logfn', '/dev/null')
         self.config.set_string('-debug', '1')
 
@@ -44,6 +47,9 @@ class Listener:
         self.deque_time = deque(maxlen=50)
         self.deque_mean = deque(maxlen=5)
 
+        self.mic = False
+        self.wf = None
+
     def reset(self):
         self.decoder = Decoder(self.config)
 
@@ -53,8 +59,9 @@ class Listener:
         return False
         
     def handle_audio(self, buf, frame_count, time_info, status):
-        if not buf: return
+        if not self.mic: buf = self.wf.readframes(frame_count)
 
+        if not buf: return
 
         self.decoder.process_raw(buf, False, False)
 
@@ -62,19 +69,21 @@ class Listener:
         self.deque_mean.append(mean_rms)
         self.deque_time.append(time.time())
 
-
         if self.decoder.hyp() != None:
             hypstr = str(self.decoder.hyp().hypstr)
-            print [(seg.word, seg.prob, seg.start_frame, seg.end_frame) for seg in self.decoder.seg()]
             print hypstr
             self.decoder.end_utt()
             self.decoder.start_utt()
-            if self.is_keyword(hypstr):
-                u.beep()
+            
+            if self.mic:
+                if self.is_keyword(hypstr):
+                    u.beep()
 
-        perfpct = 100.0*(self.deque_time[-1] - self.deque_time[0]) / max(len(self.deque_time)-1,1) * (1.0*self.RATE / self.CHUNK)
+        meas_chunk_time = max((self.deque_time[-1] - self.deque_time[0]) / max(len(self.deque_time)-1,1), 0.001)
+        pred_chunk_time = 1.0*self.CHUNK/self.RATE
+        perfpct = 100.0*pred_chunk_time/meas_chunk_time # < 100%, we're computing slowly, >100% we're time-traveling (good?). ~100% we're good
         meanRMS = 1.0*sum(self.deque_mean)/max(len(self.deque_mean),1)
-        line = self.drawBar( meanRMS, 0,1250, 50, extra="[%.0f%% speed] [%i]" % (perfpct, self.decoder.get_in_speech()) )
+        line = self.drawBar( meanRMS, 0,1250, 30, extra="[%3.0f%% speed] [%i]" % (perfpct, self.decoder.get_in_speech()) )
         sys.stdout.write("\r" + line + " ")
         sys.stdout.flush()
 
@@ -95,6 +104,8 @@ class Listener:
         return strBuff
 
     def listen_mic(self):
+        self.mic = True
+
         p = pyaudio.PyAudio()
 
         self.decoder.start_utt()
@@ -102,7 +113,7 @@ class Listener:
         print "starting"
         stream.start_stream()
         try:
-            for i in range(10*self.RUN_SECONDS):
+            for i in xrange(10*self.RUN_SECONDS):
                 time.sleep(0.1)
 
 
@@ -113,8 +124,34 @@ class Listener:
         stream.close()
         p.terminate()
         
+    def listen_file_realtime(self, fname):
+        self.mic = False
+
+        self.wf = wave.open(fname, "rb")
+        p = pyaudio.PyAudio()
+
+        self.decoder.start_utt()
+        print self.wf.getframerate()
+        stream = p.open(format=p.get_format_from_width(self.wf.getsampwidth()), channels=self.wf.getnchannels(), frames_per_buffer=self.CHUNK,rate=self.wf.getframerate(), input=True, stream_callback=self.handle_audio)
+        print "starting"
+        stream.start_stream()
+
+        try:
+            while stream.is_active():
+                time.sleep(1.0)
+        except KeyboardInterrupt:
+            print "Terminated"
+
+
+        stream.stop_stream()
+        stream.close()
+        self.wf.close()
+        p.terminate()
+
 
     def listen_file(self, fname, shutup=False):
+        self.mic = False
+
         # stream = open("psr_bg_laptop_16000_240.wav", "rb")
         stream = open(fname, "rb")
         self.decoder.start_utt()
@@ -129,6 +166,8 @@ class Listener:
             hypothesis = self.decoder.hyp()
             if hypothesis != None:
                 # print [(seg.word, seg.prob, seg.start_frame, seg.end_frame) for seg in self.decoder.seg()]
+                # print dir(list(self.decoder.seg())[0])
+                # print [(seg.word, math.exp(seg.prob), seg.lscore, seg.ascore, round(1.0*(seg.end_frame-seg.start_frame),2)) for seg in self.decoder.seg()]
                 hypstr = str(self.decoder.hyp().hypstr)
                 if not shutup:
                     print hypstr
@@ -159,11 +198,13 @@ if __name__ == '__main__':
     # lst = Listener(hmm_type=0)
     lst = Listener()
 
-    results_sig = lst.listen_file('office_bg_mac_16000_360.wav', shutup=True); print results_sig
-    lst.reset()
-    results_sig = lst.listen_file('home_navsa_pi_16000_120.wav', shutup=True); print results_sig
-    lst.reset()
-    results_sig = lst.listen_file('psr_bg_laptop_16000_240.wav', shutup=True); print results_sig
+    # results_sig = lst.listen_file('office_bg_mac_16000_360.wav', shutup=True); print results_sig
+    # lst.reset()
+    # results_sig = lst.listen_file('home_navsa_pi_16000_120.wav', shutup=True); print results_sig
+    # lst.reset()
+    # results_sig = lst.listen_file('psr_bg_laptop_16000_240.wav', shutup=True); print results_sig
+
+    lst.listen_file_realtime('home_navsa_pi_16000_120.wav')
 
     # lst.listen_mic()
 
