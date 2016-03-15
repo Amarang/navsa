@@ -13,10 +13,9 @@ class Listener:
         self.RATE = 16000
         self.FORMAT = pyaudio.paInt16
 
-        self.RUN_SECONDS = 100000
+        self.RUN_SECONDS = 10
 
         self.sampwidth = pyaudio.get_sample_size(self.FORMAT)
-        print self.sampwidth
 
         # Create a decoder with certain model
         self.config = Decoder.default_config()
@@ -28,13 +27,10 @@ class Listener:
 
         self.config.set_string('-dict', 'test/7705.dic')
         self.config.set_string('-lm', 'test/7705.lm')
-
-        # config.set_string('-logfn', 'test/dump.log')
         self.config.set_string('-logfn', '/dev/null')
         self.config.set_string('-debug', '1')
 
-
-        # default is http://cmusphinx.sourceforge.net/wiki/pocketsphinxhandhelds
+        # http://cmusphinx.sourceforge.net/wiki/pocketsphinxhandhelds
         self.config.set_boolean('-bestpath', bestpath) # default is true
         self.config.set_float('-vad_threshold', vad_threshold) # default is 2
         self.config.set_float("-pl_window", pl_window) # default is 5, range is 0 to 10
@@ -57,21 +53,30 @@ class Listener:
         return False
         
     def handle_audio(self, buf, frame_count, time_info, status):
-        self.deque_mean.append( audioop.rms(buf,self.sampwidth) )
-        if buf:
-            t0 = time.time()
-            self.decoder.process_raw(buf, False, False)
-            # print "process_raw took %.2f ms" % ((time.time()-t0))
-            self.deque_time.append(time.time())
+        if not buf: return
 
-            if self.decoder.hyp() != None:
-                hypstr = str(self.decoder.hyp().hypstr)
-                print [(seg.word, seg.prob, seg.start_frame, seg.end_frame) for seg in self.decoder.seg()]
-                print hypstr
-                self.decoder.end_utt()
-                self.decoder.start_utt()
-                if self.is_keyword(hypstr):
-                    u.beep()
+
+        self.decoder.process_raw(buf, False, False)
+
+        mean_rms = audioop.rms(buf,self.sampwidth) 
+        self.deque_mean.append(mean_rms)
+        self.deque_time.append(time.time())
+
+
+        if self.decoder.hyp() != None:
+            hypstr = str(self.decoder.hyp().hypstr)
+            print [(seg.word, seg.prob, seg.start_frame, seg.end_frame) for seg in self.decoder.seg()]
+            print hypstr
+            self.decoder.end_utt()
+            self.decoder.start_utt()
+            if self.is_keyword(hypstr):
+                u.beep()
+
+        perfpct = 100.0*(self.deque_time[-1] - self.deque_time[0]) / max(len(self.deque_time)-1,1) * (1.0*self.RATE / self.CHUNK)
+        meanRMS = 1.0*sum(self.deque_mean)/max(len(self.deque_mean),1)
+        line = self.drawBar( meanRMS, 0,1250, 50, extra="[%.0f%% speed] [%i]" % (perfpct, self.decoder.get_in_speech()) )
+        sys.stdout.write("\r" + line + " ")
+        sys.stdout.flush()
 
         return (buf, pyaudio.paContinue)
 
@@ -100,12 +105,6 @@ class Listener:
             for i in range(10*self.RUN_SECONDS):
                 time.sleep(0.1)
 
-                perfpct = 100.0*(self.deque_time[-1] - self.deque_time[0]) / max(len(self.deque_time)-1,1) * (1.0*self.RATE / self.CHUNK)
-                meanRMS = 1.0*sum(self.deque_mean)/max(len(self.deque_mean),1)
-
-                line = self.drawBar( meanRMS, 0,1250, 50, extra="[%.0f%% speed]" % (perfpct) )
-                sys.stdout.write("\r" + line + " ")
-                sys.stdout.flush()
 
         except KeyboardInterrupt:
             print "Terminated"
@@ -160,13 +159,13 @@ if __name__ == '__main__':
     # lst = Listener(hmm_type=0)
     lst = Listener()
 
-    # results_sig = lst.listen_file('office_bg_mac_16000_360.wav', shutup=True); print results_sig
-    # lst.reset()
-    # results_sig = lst.listen_file('home_navsa_pi_16000_120.wav', shutup=True); print results_sig
-    # lst.reset()
-    # results_sig = lst.listen_file('psr_bg_laptop_16000_240.wav', shutup=True); print results_sig
+    results_sig = lst.listen_file('office_bg_mac_16000_360.wav', shutup=True); print results_sig
+    lst.reset()
+    results_sig = lst.listen_file('home_navsa_pi_16000_120.wav', shutup=True); print results_sig
+    lst.reset()
+    results_sig = lst.listen_file('psr_bg_laptop_16000_240.wav', shutup=True); print results_sig
 
-    lst.listen_mic()
+    # lst.listen_mic()
 
     # import itertools, random
     # p = list(itertools.product(

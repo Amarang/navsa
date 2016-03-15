@@ -1,5 +1,13 @@
 # dependencies
+sudo apt-get install libportaudio0 libportaudio2 libportaudiocpp0 portaudio19-dev -y
+sudo apt-get install python-dev -y
+sudo apt-get install python-dev
+sudo apt-get install python-pip
+sudo pip install -U python-dateutil
 sudo pip install -U pyaudio
+
+
+
 sudo pip install -U numpy
 sudo pip install -U matplotlib
 sudo pip install -U scipy
@@ -32,7 +40,6 @@ cd pocketsphinx-5prealpha
 make clean
 make
 sudo make install
-sudo apt-get install python-pip
 sudo pip install pocketsphinx
 # in cygwin, download pocketsphinx-python manually from https://github.com/cmusphinx/pocketsphinx-python
 # edit setup.py to have: sb_include_dirs = ['sphinxbase/include', 'sphinxbase/include/sphinxbase','/usr/local/include/sphinxbase', '/usr/include/bash']
