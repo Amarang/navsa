@@ -19,6 +19,7 @@ def cullMovies(movies):
         try:
             d1 = parse(date)
             days = (datetime.datetime.today() - d1).days
+            # FIXME back to > 3
             if(days > 3): continue
             
         except:
@@ -96,27 +97,42 @@ def getData():
     for movie in movies:
         name, date, link = movie
 
+        print movie
+        rating = None
+        imdbID = None
         try:
-            movieName = name.split("(")[0]
-            movieYear = name.split("(")[1].split(")")[0]
-            rating, imdbID = movieRater.getMovieRating(movieName, movieYear, True)
-            if(rating > 5.0):
-                nmovies += 1
-                links.append(link)
-                output += "<li>%s (%s) RATING: <b>%s</b> (http://www.imdb.com/title/%s/)</li>" % (name, link, rating, imdbID)
+            movieYear = re.findall(r'\d{4}', name)[0]
+            movieName = name.split(movieYear)[0].replace("."," ").strip()
+            rating, imdbID = movieRater.getMovieRating(movieName, movieYear, returnImdbID=True)
         except:
+            try:
+                movieName = name.split("(")[0]
+                movieYear = name.split("(")[1].split(")")[0]
+                rating, imdbID = movieRater.getMovieRating(movieName, movieYear, returnImdbID=True)
+            except:
+                pass
+
+        if rating and imdbID:
+            links.append(link)
+            output += "<li>%s (%s) RATING: <b>%s</b> (http://www.imdb.com/title/%s/)</li>" % (name, link, rating, imdbID)
+        else:
             links.append(link)
             output += "<li>%s (%s)</li>" % (name, link)
-            nmovies += 1
+
+        nmovies += 1
+
         
     if nmovies > 0:
         output = initialpart + output
         output += "</ul>"
     return output, outputDetail
 
-def downloadMovies():
+def downloadMovies(urls=[]):
+    if not urls:
+        urls = links[:]
+
     import filestream as fs
-    fs.get(links)
+    fs.get(urls)
 
 if __name__=='__main__':
     print getData()

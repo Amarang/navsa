@@ -30,12 +30,15 @@ def get_filename_and_link(magnet):
     driver = webdriver.Chrome()
     driver.get("http://filestream.me")
     elem = driver.find_element_by_id("mylogin")
+    time.sleep(1)
     elem.send_keys(Keys.RETURN)
     elem = driver.find_element_by_class_name("input1")
+    time.sleep(1)
     elem.send_keys(user)
     elem = driver.find_element_by_name("password")
+    time.sleep(1)
     elem.send_keys(pw)
-    time.sleep(1) # javascript generates the next element, so we wait until the transition completes before we can click
+    time.sleep(2) # javascript generates the next element, so we wait until the transition completes before we can click
     elem = driver.find_element_by_id("sbmtlgn")
     elem.click()
 
@@ -52,7 +55,7 @@ def get_filename_and_link(magnet):
     status = ""
     for i in range(100):
         status = driver.find_elements_by_xpath("//*[starts-with(@id,'sts_')]")[0].text
-        print "Iteration %i with status:",status
+        print "Iteration %i with status: %s" % (i, status)
         if status == "complete": break
         time.sleep(30)
 
@@ -91,6 +94,7 @@ def download_parallel(url, output):
     print "downloading %s (%s) to %s/" % (url, output, download_folder)
     try:
         cmd = "%s '%s' '%s/%s'" % (pcurl, url, download_folder, output)
+        print cmd
         os.system(cmd)
     except:
         pass
@@ -107,8 +111,10 @@ def get(links):
 
         url, output = get_filename_and_link(magnet)
         # url, output = "https://fs-cache-1.filestream.me/stream/56eb991d175c56bb4c85c8d3?st=v97wFI0c8gbFkb-HeRshXQ&e=1458885558&u=1prxmWvbdk/AGRXcimeg9akPuNrdnDs1GAVmVDdAeg==", "Sample.mp4"
-        print url, output
 
+        # sanitize output or else pcurl will do weird things
+        output = output.replace(" ","_").replace(")","_").replace("(","_")
+        print url, output
 
         out = download_parallel(url, output)
         if out:
