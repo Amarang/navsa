@@ -11,7 +11,7 @@ import Utils as u
 
 class Listener:
     def __init__(self, hmm_type=1, vad_threshold=3.5, pl_window=10, wip=1e-4, 
-                  silprob=0.3, bestpath=True, do_keyphrase=False, keyphrase="NAVSA", kws_threshold=1e-4):
+                  silprob=0.3, bestpath=True, do_keyphrase=False, keyphrase="NAVSA", kws_threshold=1e-10):
         self.CHUNK = 1024
         self.RATE = 16000
         self.FORMAT = pyaudio.paInt16
@@ -54,6 +54,8 @@ class Listener:
 
         self.mic = False
         self.wf = None
+        self.rec_trigger = False
+        self.sec_since_kw = 999.9
 
     def reset(self):
         self.decoder = Decoder(self.config)
@@ -62,11 +64,14 @@ class Listener:
         if "navsa" in hyp.lower(): return True
 
         return False
+
         
     def handle_audio(self, buf, frame_count, time_info, status):
         if not self.mic: buf = self.wf.readframes(frame_count)
 
         if not buf: return
+
+        self.sec_since_kw += 1.0*self.CHUNK / self.RATE
 
         self.decoder.process_raw(buf, False, False)
 
@@ -77,18 +82,36 @@ class Listener:
         if self.decoder.hyp() != None:
             hypstr = str(self.decoder.hyp().hypstr)
             print hypstr
+            # print [(seg.word, seg.prob, seg.end_frame-seg.start_frame) for seg in self.decoder.seg()]
             self.decoder.end_utt()
             self.decoder.start_utt()
             
             if self.mic:
                 if self.is_keyword(hypstr):
+                    print "keyword:",hypstr
+                    # print [(seg.word, seg.prob, seg.end_frame-seg.start_frame) for seg in self.decoder.seg()]
                     u.beep()
+                    self.rec_trigger = True
+                    self.sec_since_kw = 0.0
+
+                    # TODO: once we've triggered the keyword, record sound to send to wit until EITHER
+                    #  - we've had 1.5 seconds of VAD=0
+                    #  OR
+                    #  - we've hit 8 seconds of recording time
+
+        trigger_extra = ""
+        if self.rec_trigger:
+            trigger_extra = "[rec - %.2f]" % self.sec_since_kw
+            if self.sec_since_kw > 3: # FIXME magic number
+                self.rec_trigger = False
+
 
         meas_chunk_time = max((self.deque_time[-1] - self.deque_time[0]) / max(len(self.deque_time)-1,1), 0.001)
         pred_chunk_time = 1.0*self.CHUNK/self.RATE
         perfpct = 100.0*pred_chunk_time/meas_chunk_time # < 100%, we're computing slowly, >100% we're time-traveling (good?). ~100% we're good
         meanRMS = 1.0*sum(self.deque_mean)/max(len(self.deque_mean),1)
-        line = self.drawBar( meanRMS, 0,1250, 30, extra="[%3.0f%% speed] [%i]" % (perfpct, self.decoder.get_in_speech()) )
+        line = self.drawBar( meanRMS, 0,1250, 30, extra="[%3.0f%% speed] [%i] %s" % (perfpct, self.decoder.get_in_speech(), trigger_extra) )
+        sys.stdout.write("\r"+ " "*100)
         sys.stdout.write("\r" + line + " ")
         sys.stdout.flush()
 
@@ -192,8 +215,9 @@ class Listener:
 
 if __name__ == '__main__':
 
-    # lst = Listener(hmm_type=0)
-    lst = Listener(do_keyphrase=True)
+    lst = Listener(hmm_type=0)
+    # lst = Listener(do_keyphrase=True)
+    # lst = Listener(hmm_type=0, do_keyphrase=True)
 
     # results_sig = lst.listen_file('sounds/test/office_bg_mac_16000_360.wav', shutup=True); print results_sig
     # lst.reset()
@@ -201,7 +225,7 @@ if __name__ == '__main__':
     # lst.reset()
     # results_sig = lst.listen_file('sounds/test/psr_bg_laptop_16000_600.wav', shutup=True); print results_sig
 
-    # lst.listen_file_realtime('sounds/test/home_navsa_pi_16000_120.wav')
+    # lst.listen_file_realtime('sounds/test/home_navsa_pi_16000_240.wav')
 
     lst.listen_mic()
 
