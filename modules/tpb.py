@@ -4,6 +4,7 @@ from dateutil.parser import parse
 import urllib2, urllib, re
 import commands
 
+links = []
 
 def cullMovies(movies):
 
@@ -14,11 +15,12 @@ def cullMovies(movies):
     for movie in movies:
         name, date, size, uploader, link = movie
         # if(uploader != 'YIFY'): continue
-        if(size > 1000): continue
+        if(size >= 1000): continue
         try:
             d1 = parse(date)
             days = (datetime.datetime.today() - d1).days
-            if(days > 2): continue
+            # FIXME back to > 3
+            if(days > 3): continue
             
         except:
             # if can't parse, probably means it has "y-day" or "45 mins ago" in it
@@ -26,13 +28,11 @@ def cullMovies(movies):
             # consideration anyways
             pass
 
-
         m = re.search("\(([0-9]{4})\)", name)
         if(m): 
             year = int(m.groups()[0])
             if year != thisYear and year != thisYear-1:
                 continue
-       
 
         # # if this is 720p and we have a 1080p version, 
         # # then ignore the 720p one
@@ -97,22 +97,43 @@ def getData():
     for movie in movies:
         name, date, link = movie
 
+        print movie
+        rating = None
+        imdbID = None
         try:
-            movieName = name.split("(")[0]
-            movieYear = name.split("(")[1].split(")")[0]
-            rating, imdbID = movieRater.getMovieRating(movieName, movieYear, True)
-            if(rating > 5.0):
-                nmovies += 1
-                output += "<li>%s (%s) RATING: <b>%s</b> (http://www.imdb.com/title/%s/)</li>" % (name, link, rating, imdbID)
+            movieYear = re.findall(r'\d{4}', name)[0]
+            movieName = name.split(movieYear)[0].replace("."," ").strip()
+            rating, imdbID = movieRater.getMovieRating(movieName, movieYear, returnImdbID=True)
         except:
+            try:
+                movieName = name.split("(")[0]
+                movieYear = name.split("(")[1].split(")")[0]
+                rating, imdbID = movieRater.getMovieRating(movieName, movieYear, returnImdbID=True)
+            except:
+                pass
+
+        if rating and imdbID:
+            links.append(link)
+            output += "<li>%s (%s) RATING: <b>%s</b> (http://www.imdb.com/title/%s/)</li>" % (name, link, rating, imdbID)
+        else:
+            links.append(link)
             output += "<li>%s (%s)</li>" % (name, link)
-            nmovies += 1
+
+        nmovies += 1
+
         
     if nmovies > 0:
         output = initialpart + output
         output += "</ul>"
     return output, outputDetail
 
+def downloadMovies(urls=[]):
+    if not urls:
+        urls = links[:]
+
+    import filestream as fs
+    fs.get(urls)
 
 if __name__=='__main__':
     print getData()
+

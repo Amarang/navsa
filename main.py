@@ -34,9 +34,11 @@ def sendMail(subject, body):
 moduleNames = [ "weather", "tv", "tpb", "barc", "move", "snt", "fb", "arxiv", "debit", "quotes" ]
 data = {}
 
+modules = {}
 for moduleName in moduleNames:
     try:
         module = __import__("modules.%s" % moduleName, fromlist=[''])
+        modules[moduleName] = module
         output, outputDetail = module.getData()
         data[moduleName] = [output,outputDetail]
         print "got %s" % moduleName
@@ -79,4 +81,5 @@ if sendMail("Status update for %s" % datetime.date.today(),body):
 else:
     print "ERROR sending email"
 
-# sendMail("test","testbody")
+# if we found any movies, download them after we send the email
+modules["tpb"].downloadMovies()

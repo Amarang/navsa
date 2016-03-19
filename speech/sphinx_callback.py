@@ -11,7 +11,8 @@ import Utils as u
 
 class Listener:
     def __init__(self, hmm_type=1, vad_threshold=3.5, pl_window=10, wip=1e-4, 
-                  silprob=0.3, bestpath=True, do_keyphrase=False, keyphrase="NAVSA", kws_threshold=1e-10):
+                  silprob=0.3, bestpath=True, remove_dc=True, do_keyphrase=False, keyphrase="NAVSA", kws_threshold=1e-4):
+
         self.CHUNK = 1024
         self.RATE = 16000
         self.FORMAT = pyaudio.paInt16
@@ -46,6 +47,7 @@ class Listener:
         self.config.set_float("-pl_window", pl_window) # default is 5, range is 0 to 10
         self.config.set_float('-wip', wip) #  0.005           Silence word transition probability
         self.config.set_float('-silprob', silprob) # 0.65            Word insertion penalty
+        self.config.set_string('-remove_dc', 'yes' if remove_dc else 'no')
 
         self.decoder = Decoder(self.config)
 
@@ -219,15 +221,17 @@ if __name__ == '__main__':
     # lst = Listener(do_keyphrase=True)
     # lst = Listener(hmm_type=0, do_keyphrase=True)
 
-    # results_sig = lst.listen_file('sounds/test/office_bg_mac_16000_360.wav', shutup=True); print results_sig
-    # lst.reset()
-    # results_sig = lst.listen_file('sounds/test/home_navsa_pi_16000_120.wav', shutup=True); print results_sig
-    # lst.reset()
-    # results_sig = lst.listen_file('sounds/test/psr_bg_laptop_16000_600.wav', shutup=True); print results_sig
+    results_sig = lst.listen_file('sounds/test/office_bg_mac_16000_360.wav', shutup=True); print results_sig
+    lst.reset()
+    results_sig = lst.listen_file('sounds/test/home_navsa_pi_16000_120.wav', shutup=True); print results_sig
+    lst.reset()
+    results_sig = lst.listen_file('sounds/test/psr_bg_laptop_16000_600.wav', shutup=True); print results_sig
+    lst.reset()
+    results_sig = lst.listen_file('sounds/test/home_navsa_pi_16000_240.wav', shutup=True); print results_sig
 
     # lst.listen_file_realtime('sounds/test/home_navsa_pi_16000_240.wav')
 
-    lst.listen_mic()
+    # lst.listen_mic()
 
     # import itertools, random
     # p = list(itertools.product(

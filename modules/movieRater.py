@@ -5,7 +5,7 @@ def getMovieRating(title, year=-1, returnImdbID=False):
 
     escapedTitle = urllib.quote(title,'')
     url = "http://www.omdbapi.com/?t=%s" % escapedTitle
-    print title,url
+    # print title,url
     if(year != -1):
         url += "&y=%s" % str(year)
     jsontxt = urllib2.urlopen(url).read()
