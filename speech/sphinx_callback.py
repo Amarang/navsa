@@ -138,7 +138,8 @@ class Listener:
         p = pyaudio.PyAudio()
 
         self.decoder.start_utt()
-        stream = p.open(format=p.get_format_from_width(self.wf.getsampwidth()), channels=self.wf.getnchannels(), frames_per_buffer=self.CHUNK,rate=self.wf.getframerate(), input=True, stream_callback=self.handle_audio)
+        # stream = p.open(format=p.get_format_from_width(self.wf.getsampwidth()), channels=self.wf.getnchannels(), frames_per_buffer=self.CHUNK,rate=self.wf.getframerate(), input=True, stream_callback=self.handle_audio)
+        stream = p.open(format=p.get_format_from_width(self.wf.getsampwidth()), channels=self.wf.getnchannels(), frames_per_buffer=self.CHUNK,rate=self.wf.getframerate(), output=True, stream_callback=self.handle_audio)
         print "starting"
         stream.start_stream()
 
@@ -194,18 +195,18 @@ class Listener:
 
 if __name__ == '__main__':
 
-    # lst = Listener(hmm_type=0)
-    lst = Listener(do_keyphrase=True, kws_threshold=1e-7)
+    lst = Listener(hmm_type=1)
+    # lst = Listener(do_keyphrase=True, kws_threshold=1e-10)
 
-    results_sig = lst.listen_file('sounds/test/office_bg_mac_16000_360.wav', shutup=True); print results_sig
-    lst.reset()
-    results_sig = lst.listen_file('sounds/test/home_navsa_pi_16000_120.wav', shutup=True); print results_sig
-    lst.reset()
-    results_sig = lst.listen_file('sounds/test/psr_bg_laptop_16000_600.wav', shutup=True); print results_sig
-    lst.reset()
-    results_sig = lst.listen_file('sounds/test/home_navsa_pi_16000_240.wav', shutup=True); print results_sig
+    # results_sig = lst.listen_file('sounds/test/office_bg_mac_16000_360.wav', shutup=True); print results_sig
+    # lst.reset()
+    # results_sig = lst.listen_file('sounds/test/home_navsa_pi_16000_120.wav', shutup=True); print results_sig
+    # lst.reset()
+    # results_sig = lst.listen_file('sounds/test/psr_bg_laptop_16000_600.wav', shutup=True); print results_sig
+    # lst.reset()
+    # results_sig = lst.listen_file('sounds/test/home_navsa_pi_16000_240.wav', shutup=True); print results_sig
 
-    # lst.listen_file_realtime('sounds/test/home_navsa_pi_16000_120.wav')
+    lst.listen_file_realtime('sounds/test/home_navsa_pi_16000_240.wav')
 
     # lst.listen_mic()
 
