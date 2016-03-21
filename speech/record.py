@@ -7,10 +7,10 @@ FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 16000
 CHUNK = 1024
-RECORD_SECONDS = 120
-where = "office" # home, office, psr, etc.
-typ = "bg" # bg, navsa, etc.
-device = "mac" # laptop, pi, mac, etc.
+RECORD_SECONDS = 600
+where = "home" # home, office, psr, etc.
+typ = "bgtv" # bg, navsa, etc.
+device = "pi" # laptop, pi, mac, etc.
 
 tag = "%s_%s_%s" % (where, typ, device)
 

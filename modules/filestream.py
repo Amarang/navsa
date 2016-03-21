@@ -102,6 +102,11 @@ def download_parallel(url, output):
     if os.path.isfile(outfile): return outfile
     else: return None
 
+def sanitize(txt):
+    # sanitize output or else pcurl will do weird things
+    return txt.replace(" ","_").replace(")","_").replace("(","_")
+    
+
 def get(links):
     for link in links:
         print link
@@ -112,8 +117,7 @@ def get(links):
         url, output = get_filename_and_link(magnet)
         # url, output = "https://fs-cache-1.filestream.me/stream/56eb991d175c56bb4c85c8d3?st=v97wFI0c8gbFkb-HeRshXQ&e=1458885558&u=1prxmWvbdk/AGRXcimeg9akPuNrdnDs1GAVmVDdAeg==", "Sample.mp4"
 
-        # sanitize output or else pcurl will do weird things
-        output = output.replace(" ","_").replace(")","_").replace("(","_")
+        output = sanitize(output)
         print url, output
 
         out = download_parallel(url, output)
