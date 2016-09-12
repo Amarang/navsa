@@ -124,15 +124,15 @@ class Lights:
 if __name__=="__main__":
     led = Lights()
 
-    stopper = led.start("decay", duration=3.0, color='b', blocking=False)
+    stopper = led.start("decay", duration=3.0, color='r', blocking=False)
     print "here"
     time.sleep(1)
     print "here 2"
     stopper()
 
-    # stopper = led.start("pulse", duration=6.0, frequency=1, color='b', blocking=False)
+    stopper = led.start("pulse", duration=6.0, frequency=1, color='b', blocking=False)
     # print "here"
     # time.sleep(1)
     # print "here 2"
-    # stopper()
+    stopper()
 
