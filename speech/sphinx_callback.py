@@ -23,6 +23,8 @@ class Listener:
 
         self.sampwidth = pyaudio.get_sample_size(self.FORMAT)
 
+        self.do_trigger = False
+
         # Create a decoder with certain model
         self.config = Decoder.default_config()
 
@@ -115,7 +117,7 @@ class Listener:
                     #  - we've hit 6 seconds of recording time
 
         trigger_extra = ""
-        if self.rec_trigger and self.mic:
+        if self.rec_trigger and self.mic and self.do_trigger:
             self.rec_frames.append(buf)
             trigger_extra = "[rec - %.2f]" % self.sec_since_kw
             if self.sec_since_kw > 6 or self.sec_since_vad > 1.5: # FIXME magic number

@@ -4,6 +4,8 @@ import os
 import time
 import config
 
+# URL = "http://filestream.me"
+URL = "https://chiko.filestream.me/?jakoredirect=no"
 
 def remove_stupid_popup():
     try: driver.find_element_by_class_name("modal-footer").click()
@@ -28,7 +30,7 @@ def get_magnet_from_tpb(url):
 def get_filename_and_link(magnet):
 
     driver = webdriver.Chrome()
-    driver.get("http://filestream.me")
+    driver.get(URL)
     elem = driver.find_element_by_id("mylogin")
     time.sleep(1)
     elem.send_keys(Keys.RETURN)
